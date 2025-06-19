@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Time Notifier App</title>
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Time Notifier">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#2196F3">
+    <link rel="manifest" href="data:application/json;base64,eyJuYW1lIjoiVGltZSBOb3RpZmllciBBcHAiLCJzaG9ydF9uYW1lIjoiVGltZU5vdGlmaWVyIiwiZGlzcGxheSI6InN0YW5kYWxvbmUiLCJzdGFydF91cmwiOiIuLyIsInRoZW1lX2NvbG9yIjoiIzIxOTZGMyIsImJhY2tncm91bmRfY29sb3IiOiIjZmZmZmZmIiwiaWNvbnMiOlt7InNyYyI6ImRhdGE6aW1hZ2Uvc3ZnK3htbDtiYXNlNjQsUEhOMlp5QjRiV3h1Y3owaWFIUjBjRG92TDNkM2R5NTNNeTV2Y21jdk1qQXdNQzl6ZG1jaUlIZHBaSFJvUFNJeU5EQWlJR2hsYVdkb2REMGlNalF3SWo0OGNtVmpkQ0IzYVdSMGFEMGlNalF3SWlCb1pXbG5hSFE5SWpJME1DSWdabWxzYkQwaVV6VkNRelZCSWk4K1BIUmxlSFFnZUQwaU1USXdJaUI1UFNJeE1qQWlJSFJsZUhRdFlXNWphRzl5UFNKdGFXUmtiR1VpUGpreE1qb3dNRHd2ZEdWNGRENDhMM04yWno0PSIsInNpemVzIjoiMjQweDI0MCIsInR5cGUiOiJpbWFnZS9zdmcreG1sIn1dfQ==">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            color: white;
+            overflow-x: hidden;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+        
+        .status-bar {
+            height: env(safe-area-inset-top, 20px);
+            background: rgba(0,0,0,0.1);
+        }
+        
+        .app-header {
+            padding: 20px;
+            text-align: center;
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+        
+        .app-title {
+            font-size: 1.8em;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+        
+        .app-subtitle {
+            opacity: 0.8;
+            font-size: 0.9em;
+        }
+        
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            text-align: center;
+        }
+        
+        .time-display {
+            background: rgba(255,255,255,0.15);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 40px;
+            margin: 20px 0;
+            border: 1px solid rgba(255,255,255,0.2);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 350px;
+        }
+        
+        .current-time {
+            font-size: 3em;
+            font-weight: 300;
+            margin-bottom: 10px;
+            font-family: 'SF Mono', 'Monaco', 'Inconsolata', monospace;
+        }
+        
+        .current-date {
+            font-size: 1.1em;
+            opacity: 0.9;
+            margin-bottom: 20px;
+        }
+        
+        .notification-status {
+            background: rgba(255,255,255,0.1);
+            border-radius: 15px;
+            padding: 20px;
+            margin: 20px 0;
+            width: 100%;
+            max-width: 350px;
+        }
+        
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 15px;
+        }
+        
+        .status-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 10px;
+            animation: pulse 2s infinite;
+        }
+        
+        .status-active {
+            background: #4CAF50;
+        }
+        
+        .status-inactive {
+            background: #f44336;
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+        
+        .control-button {
+            background: rgba(255,255,255,0.2);
+            border: 1px solid rgba(255,255,255,0.3);
+            color: white;
+            padding: 15px 30px;
+            border-radius: 25px;
+            font-size: 1em;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 10px;
+            min-width: 120px;
+        }
+        
+        .control-button:hover {
+            background: rgba(255,255,255,0.3);
+            transform: translateY(-2px);
+        }
+        
+        .control-button:active {
+            transform: translateY(0);
+        }
+        
+        .control-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            width: 100%;
+            max-width: 350px;
+            margin-top: 20px;
+        }
+        
+        .stat-item {
+            background: rgba(255,255,255,0.1);
+            border-radius: 12px;
+            padding: 15px;
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 1.5em;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+        
+        .stat-label {
+            font-size: 0.8em;
+            opacity: 0.8;
+        }
+        
+        .footer {
+            padding: 20px;
+            text-align: center;
+            font-size: 0.8em;
+            opacity: 0.7;
+            background: rgba(0,0,0,0.1);
+        }
+        
+        .permission-prompt {
+            background: rgba(255,193,7,0.9);
+            color: #333;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px;
+            text-align: center;
+            font-weight: 500;
+        }
+        
+        @media (max-width: 480px) {
+            .current-time {
+                font-size: 2.5em;
+            }
+            
+            .time-display {
+                padding: 30px;
+            }
+            
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        /* PWA styles */
+        @media (display-mode: standalone) {
+            .status-bar {
+                height: env(safe-area-inset-top, 44px);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="status-bar"></div>
+    
+    <div class="app-header">
+        <div class="app-title">⏰ Time Notifier</div>
+        <div class="app-subtitle">Minute-by-minute time notifications</div>
+    </div>
+    
+    <div class="main-content">
+        <div class="time-display">
+            <div class="current-time" id="currentTime">--:--:--</div>
+            <div class="current-date" id="currentDate">Loading...</div>
+        </div>
+        
+        <div class="notification-status">
+            <div class="status-indicator">
+                <div class="status-dot" id="statusDot"></div>
+                <span id="statusText">Initializing...</span>
+            </div>
+            
+            <div style="display: flex; justify-content: center; flex-wrap: wrap;">
+                <button class="control-button" id="startBtn" onclick="startNotifications()">Start</button>
+                <button class="control-button" id="stopBtn" onclick="stopNotifications()" disabled>Stop</button>
+            </div>
+        </div>
+        
+        <div class="stats-grid">
+            <div class="stat-item">
+                <div class="stat-value" id="notificationCount">0</div>
+                <div class="stat-label">Notifications Sent</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="uptime">00:00</div>
+                <div class="stat-label">Uptime</div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="footer">
+        Time Notifier App • Native Notifications
+    </div>
+
+    <script>
+        let notificationInterval = null;
+        let notificationCount = 0;
+        let startTime = null;
+        let uptimeInterval = null;
+        
+        // Elements
+        const currentTimeEl = document.getElementById('currentTime');
+        const currentDateEl = document.getElementById('currentDate');
+        const statusDotEl = document.getElementById('statusDot');
+        const statusTextEl = document.getElementById('statusText');
+        const startBtn = document.getElementById('startBtn');
+        const stopBtn = document.getElementById('stopBtn');
+        const notificationCountEl = document.getElementById('notificationCount');
+        const uptimeEl = document.getElementById('uptime');
+        
+        // Update current time display
+        function updateTimeDisplay() {
+            const now = new Date();
+            const timeString = now.toLocaleTimeString();
+            const dateString = now.toLocaleDateString('en-US', { 
+                weekday: 'long', 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric' 
+            });
+            
+            currentTimeEl.textContent = timeString;
+            currentDateEl.textContent = dateString;
+        }
+        
+        // Send time notification
+        function sendTimeNotification() {
+            if (Notification.permission === 'granted') {
+                const now = new Date();
+                const timeString = now.toLocaleTimeString();
+                const dateString = now.toLocaleDateString();
+                
+                try {
+                    const notification = new Notification('⏰ Time Update', {
+                        body: `Current time: ${timeString}\n${dateString}`,
+                        icon: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNDAiIGhlaWdodD0iMjQwIj48cmVjdCB3aWR0aD0iMjQwIiBoZWlnaHQ9IjI0MCIgZmlsbD0iIzIxOTZGMyIvPjx0ZXh0IHg9IjEyMCIgeT0iMTIwIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj7ijrA8L3RleHQ+PC9zdmc+',
+                        tag: 'time-notification',
+                        requireInteraction: false,
+                        silent: false
+                    });
+                    
+                    // Auto close after 3 seconds
+                    setTimeout(() => {
+                        notification.close();
+                    }, 3000);
+                    
+                    // Update count
+                    notificationCount++;
+                    notificationCountEl.textContent = notificationCount;
+                    
+                    console.log('Time notification sent:', timeString);
+                    
+                } catch (error) {
+                    console.error('Failed to send notification:', error);
+                    updateStatus('error', 'Notification failed');
+                }
+            } else {
+                console.warn('Notification permission not granted');
+                stopNotifications();
+                updateStatus('inactive', 'Permission denied');
+            }
+        }
+        
+        // Start notifications
+        function startNotifications() {
+            if (Notification.permission === 'granted') {
+                beginNotifications();
+            } else if (Notification.permission === 'default') {
+                Notification.requestPermission().then(permission => {
+                    if (permission === 'granted') {
+                        beginNotifications();
+                    } else {
+                        updateStatus('inactive', 'Permission denied');
+                    }
+                });
+            } else {
+                updateStatus('inactive', 'Notifications blocked');
+            }
+        }
+        
+        // Begin the notification process
+        function beginNotifications() {
+            // Send first notification immediately
+            sendTimeNotification();
+            
+            // Set up interval for every minute
+            notificationInterval = setInterval(sendTimeNotification, 60000);
+            
+            // Update UI
+            startBtn.disabled = true;
+            stopBtn.disabled = false;
+            updateStatus('active', 'Sending notifications every minute');
+            
+            // Start uptime counter
+            startTime = Date.now();
+            uptimeInterval = setInterval(updateUptime, 1000);
+            
+            console.log('Time notifications started');
+        }
+        
+        // Stop notifications
+        function stopNotifications() {
+            if (notificationInterval) {
+                clearInterval(notificationInterval);
+                notificationInterval = null;
+            }
+            
+            if (uptimeInterval) {
+                clearInterval(uptimeInterval);
+                uptimeInterval = null;
+            }
+            
+            // Update UI
+            startBtn.disabled = false;
+            stopBtn.disabled = true;
+            updateStatus('inactive', 'Notifications stopped');
+            
+            console.log('Time notifications stopped');
+        }
+        
+        // Update status display
+        function updateStatus(status, text) {
+            statusTextEl.textContent = text;
+            statusDotEl.className = `status-dot status-${status}`;
+        }
+        
+        // Update uptime display
+        function updateUptime() {
+            if (startTime) {
+                const elapsed = Date.now() - startTime;
+                const minutes = Math.floor(elapsed / 60000);
+                const seconds = Math.floor((elapsed % 60000) / 1000);
+                uptimeEl.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            }
+        }
+        
+        // Check notification support and permissions
+        function checkNotificationSupport() {
+            if (!('Notification' in window)) {
+                updateStatus('inactive', 'Notifications not supported');
+                startBtn.disabled = true;
+                return;
+            }
+            
+            switch (Notification.permission) {
+                case 'granted':
+                    updateStatus('inactive', 'Ready to start notifications');
+                    break;
+                case 'denied':
+                    updateStatus('inactive', 'Notifications blocked');
+                    startBtn.disabled = true;
+                    break;
+                default:
+                    updateStatus('inactive', 'Permission required');
+                    break;
+            }
+        }
+        
+        // Initialize app
+        function initializeApp() {
+            // Update time display immediately and every second
+            updateTimeDisplay();
+            setInterval(updateTimeDisplay, 1000);
+            
+            // Check notification support
+            checkNotificationSupport();
+            
+            console.log('Time Notifier App initialized');
+        }
+        
+        // Prevent app refresh on mobile
+        window.addEventListener('beforeunload', function(e) {
+            if (notificationInterval) {
+                e.preventDefault();
+                e.returnValue = 'Notifications are running. Are you sure you want to leave?';
+            }
+        });
+        
+        // Handle visibility change (app going to background)
+        document.addEventListener('visibilitychange', function() {
+            if (document.hidden) {
+                console.log('App went to background');
+            } else {
+                console.log('App came to foreground');
+                updateTimeDisplay();
+            }
+        });
+        
+        // Initialize when page loads
+        window.addEventListener('load', initializeApp);
+    </script>
+</body>
+</html>
