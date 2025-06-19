@@ -356,51 +356,134 @@
                 throw new Error('Service Workers not supported in this browser');
             }
             
-            try {
-                // Create a simple service worker inline
+            try {                // Create a comprehensive service worker following Web Push Book patterns
                 const swCode = `
+                    // Service Worker for Time Notifier App - Following Web Push Book best practices
+                    
                     self.addEventListener('push', function(event) {
-                        console.log('[SW] Push received');
+                        console.log('[SW] Push event received');
+                        // Handle push messages if needed in the future
                     });
                     
                     self.addEventListener('notificationclick', function(event) {
-                        console.log('[SW] Notification clicked');
-                        event.notification.close();
+                        console.log('[SW] Notification clicked', event);
                         
-                        // Focus or open the app window
-                        event.waitUntil(
-                            clients.matchAll({
-                                type: 'window',
-                                includeUncontrolled: true
-                            }).then(function(clientList) {
-                                if (clientList.length > 0) {
-                                    return clientList[0].focus();
-                                }
-                                return clients.openWindow('/');
-                            })
-                        );
+                        const clickedNotification = event.notification;
+                        clickedNotification.close();
+                        
+                        const notificationData = event.notification.data || {};
+                        
+                        // Handle action button clicks
+                        if (event.action) {
+                            console.log('[SW] Action clicked:', event.action);
+                            
+                            switch (event.action) {
+                                case 'view-app':
+                                    // Open or focus the app
+                                    event.waitUntil(
+                                        clients.matchAll({
+                                            type: 'window',
+                                            includeUncontrolled: true
+                                        }).then(function(clientList) {
+                                            // Focus existing window if available
+                                            for (let client of clientList) {
+                                                if (client.url.includes('/app/app.html') && 'focus' in client) {
+                                                    return client.focus();
+                                                }
+                                            }
+                                            // Open new window if no existing one
+                                            if (clients.openWindow) {
+                                                return clients.openWindow('/app/app.html');
+                                            }
+                                        })
+                                    );
+                                    break;
+                                    
+                                case 'dismiss':
+                                    // Just close the notification (already done above)
+                                    console.log('[SW] Notification dismissed by user action');
+                                    break;
+                                    
+                                default:
+                                    console.log('[SW] Unknown action:', event.action);
+                                    break;
+                            }
+                        } else {
+                            // Handle general notification click (no specific action)
+                            console.log('[SW] General notification click');
+                            
+                            event.waitUntil(
+                                clients.matchAll({
+                                    type: 'window',
+                                    includeUncontrolled: true
+                                }).then(function(clientList) {
+                                    // Focus existing window if available
+                                    for (let client of clientList) {
+                                        if (client.url.includes('/app/app.html') && 'focus' in client) {
+                                            return client.focus();
+                                        }
+                                    }
+                                    // Open new window if no existing one
+                                    if (clients.openWindow) {
+                                        return clients.openWindow('/app/app.html');
+                                    }
+                                })
+                            );
+                        }
                     });
                     
                     self.addEventListener('notificationclose', function(event) {
-                        console.log('[SW] Notification closed');
+                        console.log('[SW] Notification closed', event);
+                        
+                        const notificationData = event.notification.data || {};
+                        
+                        // Track notification close events if needed
+                        console.log('[SW] Notification closed:', {
+                            tag: event.notification.tag,
+                            timestamp: notificationData.timestamp,
+                            type: notificationData.type
+                        });
+                    });
+                    
+                    // Handle service worker installation
+                    self.addEventListener('install', function(event) {
+                        console.log('[SW] Service Worker installing');
+                        self.skipWaiting();
+                    });
+                    
+                    // Handle service worker activation
+                    self.addEventListener('activate', function(event) {
+                        console.log('[SW] Service Worker activating');
+                        event.waitUntil(self.clients.claim());
                     });
                 `;
-                
-                const blob = new Blob([swCode], { type: 'application/javascript' });
+                  const blob = new Blob([swCode], { type: 'application/javascript' });
                 const swUrl = URL.createObjectURL(blob);
                 
-                serviceWorkerRegistration = await navigator.serviceWorker.register(swUrl);
-                console.log('Service Worker registered successfully:', serviceWorkerRegistration);
+                // Register the service worker with proper scope
+                const registration = await navigator.serviceWorker.register(swUrl, {
+                    scope: '/app/'
+                });
+                
+                console.log('Service Worker registered successfully:', registration);
                 
                 // Wait for the service worker to be ready
-                await navigator.serviceWorker.ready;
-                console.log('Service Worker is ready');
+                serviceWorkerRegistration = await navigator.serviceWorker.ready;
+                console.log('Service Worker is ready:', serviceWorkerRegistration);
+                
+                // Listen for service worker updates
+                serviceWorkerRegistration.addEventListener('updatefound', () => {
+                    console.log('Service Worker update found');
+                });
+                
+                // Clean up blob URL
+                URL.revokeObjectURL(swUrl);
                 
                 return serviceWorkerRegistration;
                 
             } catch (error) {
                 console.error('Service Worker registration failed:', error);
-                throw error;
+                throw new Error(`Service Worker registration failed: ${error.message}`);
             }
         }
         
@@ -417,8 +500,7 @@
             
             currentTimeEl.textContent = timeString;
             currentDateEl.textContent = dateString;
-        }
-          // Send time notification using Service Worker
+        }        // Send time notification using Service Worker following Web Push Book best practices
         async function sendTimeNotification() {
             if (Notification.permission !== 'granted') {
                 showNotificationFailure(
@@ -442,25 +524,72 @@
             
             try {
                 const now = new Date();
-                const timeString = now.toLocaleTimeString();
-                const dateString = now.toLocaleDateString();
+                const timeString = now.toLocaleTimeString('en-US', { 
+                    hour12: true, 
+                    hour: 'numeric', 
+                    minute: '2-digit',
+                    second: '2-digit'
+                });
+                const dateString = now.toLocaleDateString('en-US', { 
+                    weekday: 'short', 
+                    month: 'short', 
+                    day: 'numeric' 
+                });
                 
+                // Build comprehensive notification options following Web Push Book guidelines
                 const notificationOptions = {
-                    body: `Current time: ${timeString}\n${dateString}`,
-                    icon: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNDAiIGhlaWdodD0iMjQwIj48cmVjdCB3aWR0aD0iMjQwIiBoZWlnaHQ9IjI0MCIgZmlsbD0iIzIxOTZGMyIvPjx0ZXh0IHg9IjEyMCIgeT0iMTIwIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSJ3aGl0ZSIgZm9udC1zaXplPSI2MCI+4o6wPC90ZXh0Pjwvc3ZnPg==',
-                    badge: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI5NiIgaGVpZ2h0PSI5NiI+PHJlY3Qgd2lkdGg9Ijk2IiBoZWlnaHQ9Ijk2IiBmaWxsPSIjMjE5NkYzIi8+PHRleHQgeD0iNDgiIHk9IjQ4IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSJ3aGl0ZSIgZm9udC1zaXplPSIyNCI+4o6wPC90ZXh0Pjwvc3ZnPg==',
-                    tag: 'time-notification',
-                    requireInteraction: false,
-                    silent: false,
+                    // Visual options
+                    body: `It's ${timeString} on ${dateString}`,
+                    icon: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxOTIiIGhlaWdodD0iMTkyIiB2aWV3Qm94PSIwIDAgMjQgMjQiIGZpbGw9Im5vbmUiPjxjaXJjbGUgY3g9IjEyIiBjeT0iMTIiIHI9IjEwIiBzdHJva2U9IiMyMTk2RjMiIHN0cm9rZS13aWR0aD0iMiIgZmlsbD0iI2Y1ZjVmNSIvPjxwYXRoIGQ9Im0xMiA2IDAgNiA0IDQiIHN0cm9rZT0iIzIxOTZGMyIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz48L3N2Zz4=',
+                    badge: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI3MiIgaGVpZ2h0PSI3MiIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIj48Y2lyY2xlIGN4PSIxMiIgY3k9IjEyIiByPSIxMCIgZmlsbD0iIzIxOTZGMyIvPjxwYXRoIGQ9Im0xMiA2IDAgNiA0IDQiIHN0cm9rZT0id2hpdGUiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+PC9zdmc+',
+                    
+                    // Behavioral options
+                    tag: 'time-notifier-app',
+                    renotify: true, // Play sound/vibrate even when replacing
+                    requireInteraction: false, // Don't force user interaction
+                    silent: false, // Allow sound and vibration
+                    
+                    // Vibration pattern (short burst for time update)
                     vibrate: [200, 100, 200],
+                    
+                    // Timestamp for when this notification represents
+                    timestamp: now.getTime(),
+                    
+                    // Custom data for the notification
                     data: {
+                        type: 'time-update',
                         timestamp: now.getTime(),
-                        type: 'time-update'
-                    }
+                        timeString: timeString,
+                        dateString: dateString,
+                        notificationId: `time-${now.getTime()}`
+                    },
+                    
+                    // Direction (auto-detect based on content)
+                    dir: 'auto'
                 };
                 
-                // Use Service Worker to show notification
-                await serviceWorkerRegistration.showNotification('⏰ Time Update', notificationOptions);
+                // Add action buttons if supported by the browser
+                if ('actions' in Notification.prototype) {
+                    const maxActions = Notification.maxActions;
+                    if (maxActions >= 2) {
+                        notificationOptions.actions = [
+                            {
+                                action: 'view-app',
+                                title: 'Open App',
+                                icon: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9IiMzMzMzMzMiIHN0cm9rZS13aWR0aD0iMiI+PHBhdGggZD0iTTIxIDEydi03YTItMiAwIDAtMS0yLTJINWEyIDIgMCAwIDAtMiAydjE0YTIgMiAwIDAgMCAyIDJoN20zLTlsNSA1LTUgNW0tNS01aDE0Ii8+PC9zdmc+'
+                            },
+                            {
+                                action: 'dismiss',
+                                title: 'Dismiss',
+                                icon: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9IiMzMzMzMzMiIHN0cm9rZS13aWR0aD0iMiI+PGxpbmUgeDE9IjE4IiB5MT0iNiIgeDI9IjYiIHkyPSIxOCIvPjxsaW5lIHgxPSI2IiB5MT0iNiIgeDI9IjE4IiB5Mj0iMTgiLz48L3N2Zz4='
+                            }
+                        ];
+                    }
+                }
+                  // Use Service Worker to show notification with comprehensive options
+                // Following UX best practices: specific title, avoid domain duplication
+                const notificationTitle = `${timeString} • ${dateString}`;
+                await serviceWorkerRegistration.showNotification(notificationTitle, notificationOptions);
                 
                 // Update count
                 notificationCount++;
@@ -590,8 +719,7 @@
                 const seconds = Math.floor((elapsed % 60000) / 1000);
                 uptimeEl.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
             }
-        }
-          // Check notification support and permissions
+        }        // Check notification support and permissions with comprehensive feature detection
         function checkNotificationSupport() {
             if (!('Notification' in window)) {
                 showNotificationFailure(
@@ -604,10 +732,46 @@
                 return;
             }
             
+            if (!('serviceWorker' in navigator)) {
+                showNotificationFailure(
+                    'Service Workers Not Supported',
+                    'This browser does not support Service Workers required for advanced notifications',
+                    'Try using a modern browser version or enable Service Workers in settings'
+                );
+                updateStatus('inactive', 'Service Workers not supported');
+                startBtn.disabled = true;
+                return;
+            }
+            
+            // Feature detection for notification options
+            const supportedFeatures = [];
+            const unsupportedFeatures = [];
+            
+            // Check for various notification features
+            const featuresToCheck = ['actions', 'badge', 'image', 'renotify', 'requireInteraction', 'silent', 'tag', 'vibrate'];
+            
+            featuresToCheck.forEach(feature => {
+                if (feature in Notification.prototype) {
+                    supportedFeatures.push(feature);
+                } else {
+                    unsupportedFeatures.push(feature);
+                }
+            });
+            
+            console.log('Supported notification features:', supportedFeatures);
+            if (unsupportedFeatures.length > 0) {
+                console.log('Unsupported notification features:', unsupportedFeatures);
+            }
+            
+            // Check max actions support
+            if ('actions' in Notification.prototype) {
+                console.log('Max notification actions supported:', Notification.maxActions);
+            }
+            
             switch (Notification.permission) {
                 case 'granted':
                     hideNotificationFailure();
-                    updateStatus('inactive', 'Ready to start notifications');
+                    updateStatus('inactive', `Ready to start notifications (${supportedFeatures.length}/${featuresToCheck.length} features supported)`);
                     break;
                 case 'denied':
                     showNotificationFailure(
@@ -620,7 +784,7 @@
                     break;
                 default:
                     hideNotificationFailure();
-                    updateStatus('inactive', 'Permission required');
+                    updateStatus('inactive', 'Permission required - click Start to request');
                     break;
             }
         }
