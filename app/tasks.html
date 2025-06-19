@@ -317,12 +317,32 @@
 
     <script>
         let serviceWorkerRegistration = null;
-        
-        // Initialize page
+          // Initialize page
         async function init() {
-            await registerServiceWorker();
-            checkNotificationSupport();
-            checkFeatureSupport();
+            console.log('Initializing notification examples page...');
+            
+            try {
+                // Register service worker (don't wait for it to complete)
+                registerServiceWorker().catch(error => {
+                    console.warn('Service Worker registration failed:', error);
+                });
+                
+                // Check notification support immediately
+                checkNotificationSupport();
+                  // Check feature support
+                checkFeatureSupport();
+                
+                // Add event listeners as backup
+                const enableButton = document.getElementById('enableButton');
+                if (enableButton) {
+                    enableButton.addEventListener('click', requestPermission);
+                    console.log('Event listener added to enable button');
+                }
+                
+                console.log('Page initialization complete');
+            } catch (error) {
+                console.error('Error during initialization:', error);
+            }
         }
         
         // Register Service Worker
@@ -390,15 +410,17 @@
                 console.error('Service Worker registration failed:', error);
             }
         }
-        
-        // Check notification support
+          // Check notification support
         function checkNotificationSupport() {
             const statusEl = document.getElementById('permissionStatus');
             const buttonEl = document.getElementById('enableButton');
             
+            console.log('Checking notification support. Permission:', Notification.permission);
+            
             if (!('Notification' in window)) {
                 statusEl.textContent = '❌ Notifications not supported in this browser';
                 buttonEl.disabled = true;
+                buttonEl.textContent = 'Not Supported';
                 disableAllButtons();
                 return;
             }
@@ -410,22 +432,94 @@
                     enableAllButtons();
                     break;
                 case 'denied':
-                    statusEl.textContent = '❌ Notifications blocked - Please enable in browser settings';
+                    statusEl.textContent = '❌ Notifications blocked - Please enable in browser settings and refresh';
                     buttonEl.disabled = true;
+                    buttonEl.textContent = 'Blocked';
+                    buttonEl.style.display = 'block';
                     disableAllButtons();
                     break;
-                default:
+                default: // 'default' permission state
                     statusEl.textContent = '⚠️ Click to enable notifications for testing';
                     buttonEl.disabled = false;
-                    disableAllButtons();
+                    buttonEl.textContent = 'Enable Notifications';
+                    buttonEl.style.display = 'block';
+                    disableAllButtons(); // Keep example buttons disabled until permission granted
                     break;
             }
         }
-        
-        // Request notification permission
+          // Request notification permission
         async function requestPermission() {
-            const permission = await Notification.requestPermission();
-            checkNotificationSupport();
+            try {
+                console.log('Requesting notification permission...');
+                
+                if (!('Notification' in window)) {
+                    alert('This browser does not support notifications');
+                    return;
+                }
+                
+                // Check current permission state
+                console.log('Current permission:', Notification.permission);
+                
+                if (Notification.permission === 'granted') {
+                    console.log('Permission already granted');
+                    checkNotificationSupport();
+                    return;
+                }
+                
+                if (Notification.permission === 'denied') {
+                    alert('Notifications are blocked. Please enable them in your browser settings and refresh the page.');
+                    return;
+                }
+                  // Request permission (handle both Promise and callback APIs)
+                let permission;
+                if ('Notification' in window) {
+                    // Modern browsers return a Promise
+                    if (typeof Notification.requestPermission === 'function') {
+                        const result = Notification.requestPermission();
+                        if (result && typeof result.then === 'function') {
+                            // Promise API
+                            permission = await result;
+                        } else {
+                            // Callback API (older browsers)
+                            permission = await new Promise((resolve) => {
+                                Notification.requestPermission((result) => {
+                                    resolve(result);
+                                });
+                            });
+                        }
+                    } else {
+                        throw new Error('Notification.requestPermission is not available');
+                    }
+                } else {
+                    throw new Error('Notifications not supported');
+                }
+                console.log('Permission result:', permission);
+                
+                // Update UI based on result
+                checkNotificationSupport();
+                
+                if (permission === 'granted') {
+                    // Show a test notification
+                    if (serviceWorkerRegistration) {
+                        await serviceWorkerRegistration.showNotification('🎉 Notifications Enabled!', {
+                            body: 'You can now test all notification examples',
+                            icon: 'data:image/svg+xml;base64,' + btoa('<svg xmlns="http://www.w3.org/2000/svg" width="192" height="192" viewBox="0 0 24 24" fill="none"><rect width="24" height="24" fill="#4CAF50" rx="4"/><path d="m9 12 2 2 4-4" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>'),
+                            tag: 'permission-granted'
+                        });
+                    } else {
+                        new Notification('🎉 Notifications Enabled!', {
+                            body: 'You can now test all notification examples',
+                            icon: 'data:image/svg+xml;base64,' + btoa('<svg xmlns="http://www.w3.org/2000/svg" width="192" height="192" viewBox="0 0 24 24" fill="none"><rect width="24" height="24" fill="#4CAF50" rx="4"/><path d="m9 12 2 2 4-4" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>')
+                        });
+                    }
+                } else {
+                    alert('Notification permission was denied. Please refresh the page and try again.');
+                }
+                
+            } catch (error) {
+                console.error('Error requesting notification permission:', error);
+                alert('Error requesting permission: ' + error.message);
+            }
         }
         
         // Check feature support
