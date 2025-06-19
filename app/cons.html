@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Solar Consumption Monitor</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #4CAF50, #45a049);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            opacity: 0.9;
+            font-size: 1.1em;
+        }
+        
+        .content {
+            padding: 30px;
+        }
+        
+        .status-card {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-left: 4px solid #4CAF50;
+        }
+        
+        .consumption-display {
+            display: none;
+            background: linear-gradient(135deg, #e8f5e8, #f0f8f0);
+            border-radius: 10px;
+            padding: 25px;
+            text-align: center;
+            margin: 20px 0;
+        }
+        
+        .consumption-value {
+            font-size: 3em;
+            font-weight: bold;
+            color: #2e7d32;
+            margin: 10px 0;
+        }
+        
+        .consumption-unit {
+            font-size: 1.2em;
+            color: #666;
+        }
+        
+        .details-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .detail-item {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        .detail-label {
+            font-size: 0.9em;
+            color: #666;
+            margin-bottom: 5px;
+        }
+        
+        .detail-value {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #333;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 40px;
+        }
+        
+        .loading-spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #4CAF50;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .error {
+            background: #ffebee;
+            color: #c62828;
+            border-left-color: #f44336;
+        }
+        
+        .success {
+            background: #e8f5e8;
+            color: #2e7d32;
+            border-left-color: #4CAF50;
+        }
+        
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2em;
+            }
+            
+            .consumption-value {
+                font-size: 2.5em;
+            }
+            
+            .details-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>⚡ Solar Consumption Monitor</h1>
+            <p>Real-time power consumption tracking</p>
+        </div>
+        
+        <div class="content">
+            <div class="status-card" id="statusCard">
+                <div class="loading">
+                    <div class="loading-spinner"></div>
+                    <p id="statusText">Loading consumption data...</p>
+                </div>
+            </div>
+            
+            <div class="consumption-display" id="consumptionDisplay">
+                <div class="consumption-value" id="consumptionValue">0</div>
+                <div class="consumption-unit">Watts Average</div>
+                
+                <div class="details-grid">
+                    <div class="detail-item">
+                        <div class="detail-label">Data Points</div>
+                        <div class="detail-value" id="dataPoints">0</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Time Range</div>
+                        <div class="detail-value" id="timeRange">-</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Last Updated</div>
+                        <div class="detail-value" id="lastUpdated">-</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Status</div>
+                        <div class="detail-value" id="systemStatus">Active</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Function to format date as YYYY-MM-DD HH:mm:ss
+        function formatDate(date) {
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            const hours = String(date.getHours()).padStart(2, '0');
+            const minutes = String(date.getMinutes()).padStart(2, '0');
+            const seconds = String(date.getSeconds()).padStart(2, '0');
+            
+            return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+        }
+        
+        // Get current date and 15 minutes before
+        const currentDate = new Date();
+        const fifteenMinutesAgo = new Date(currentDate.getTime() - (15 * 60 * 1000));
+        
+        const formattedEndDate = formatDate(currentDate);
+        const formattedStartDate = formatDate(fifteenMinutesAgo);
+        
+        console.log('Start Date:', formattedStartDate);
+        console.log('End Date:', formattedEndDate);
+        
+        // JSONP callback function
+        window.solarEdgeCallback = function(data) {
+            console.log('SolarEdge API Response:', data);
+            
+            const statusCard = document.getElementById('statusCard');
+            const statusText = document.getElementById('statusText');
+            const consumptionDisplay = document.getElementById('consumptionDisplay');
+            const consumptionValue = document.getElementById('consumptionValue');
+            const dataPointsElement = document.getElementById('dataPoints');
+            const timeRangeElement = document.getElementById('timeRange');
+            const lastUpdatedElement = document.getElementById('lastUpdated');
+            
+            try {
+                // Check if we have valid data
+                if (data && data.powerDetails && data.powerDetails.meters && data.powerDetails.meters.length > 0) {
+                    const meterData = data.powerDetails.meters[0]; // Get first meter (CONSUMPTION)
+                    
+                    if (meterData.values && meterData.values.length > 0) {
+                        // Calculate average of all values
+                        const values = meterData.values.map(item => item.value || 0);
+                        const validValues = values.filter(val => val !== null && val !== undefined && !isNaN(val));
+                        
+                        if (validValues.length > 0) {
+                            const average = validValues.reduce((sum, val) => sum + val, 0) / validValues.length;
+                            
+                            // Update display
+                            statusCard.className = 'status-card success';
+                            statusText.textContent = 'Data loaded successfully!';
+                            
+                            // Show consumption data
+                            consumptionDisplay.style.display = 'block';
+                            consumptionValue.textContent = average.toFixed(2);
+                            dataPointsElement.textContent = validValues.length;
+                            timeRangeElement.textContent = `${formattedStartDate.split(' ')[1]} - ${formattedEndDate.split(' ')[1]}`;
+                            lastUpdatedElement.textContent = new Date().toLocaleTimeString();
+                            
+                            console.log('Average power consumption:', average.toFixed(2), 'W');
+                            console.log('Valid data points:', validValues.length);
+                        } else {
+                            showError('No valid data points found in the response');
+                        }
+                    } else {
+                        showError('No values found in the meter data');
+                    }
+                } else {
+                    showError('Invalid or empty response from API');
+                }
+            } catch (error) {
+                console.error('Error processing response:', error);
+                showError('Error processing response: ' + error.message);
+            }
+        };
+        
+        // Function to show error state
+        function showError(message) {
+            const statusCard = document.getElementById('statusCard');
+            const statusText = document.getElementById('statusText');
+            
+            statusCard.className = 'status-card error';
+            statusCard.innerHTML = `<p>${message}</p>`;
+        }
+        
+        // Create JSONP request
+        function makeJsonpRequest() {
+            const apiUrl = `https://monitoringapi.solaredge.com/site/1892524/powerDetails?meters=CONSUMPTION&startTime=${encodeURIComponent(formattedStartDate)}&endTime=${encodeURIComponent(formattedEndDate)}&api_key=LN4T1U86HLWSV31ICAFO20P8A6H03MTT&callback=solarEdgeCallback`;
+            
+            console.log('Making JSONP request to:', apiUrl);
+            
+            const script = document.createElement('script');
+            script.src = apiUrl;
+            script.onerror = function() {
+                console.error('JSONP request failed');
+                showError('Failed to load data from SolarEdge API');
+            };
+            
+            document.head.appendChild(script);
+            
+            // Clean up the script tag after a few seconds
+            setTimeout(() => {
+                if (script.parentNode) {
+                    document.head.removeChild(script);
+                }
+            }, 10000);
+        }
+        
+        // Auto-refresh every 5 minutes
+        function startAutoRefresh() {
+            setInterval(() => {
+                console.log('Auto-refreshing data...');
+                makeJsonpRequest();
+            }, 5 * 60 * 1000); // 5 minutes
+        }
+        
+        // Initialize when page loads
+        window.addEventListener('load', function() {
+            makeJsonpRequest();
+            startAutoRefresh();
+        });
+    </script>
+</body>
+</html>
