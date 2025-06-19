@@ -1,0 +1,746 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Notification Examples</title>
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Notification Examples">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#2196F3">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: white;
+            overflow-x: hidden;
+        }
+        
+        .header {
+            padding: 20px;
+            text-align: center;
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+        
+        .title {
+            font-size: 1.8em;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+        
+        .subtitle {
+            opacity: 0.8;
+            font-size: 0.9em;
+        }
+        
+        .main-content {
+            padding: 20px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .permission-section {
+            background: rgba(255,255,255,0.15);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .permission-status {
+            font-size: 1.1em;
+            margin-bottom: 15px;
+            font-weight: 500;
+        }
+        
+        .permission-button {
+            background: rgba(76, 175, 80, 0.8);
+            border: none;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 25px;
+            font-size: 1em;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .permission-button:hover {
+            background: rgba(76, 175, 80, 1);
+            transform: translateY(-2px);
+        }
+        
+        .permission-button:disabled {
+            background: rgba(255,255,255,0.2);
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .examples-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        .example-section {
+            background: rgba(255,255,255,0.15);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: 15px;
+            padding: 20px;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+        
+        .section-title {
+            font-size: 1.2em;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: #fff;
+        }
+        
+        .example-button {
+            background: rgba(255,255,255,0.2);
+            border: 1px solid rgba(255,255,255,0.3);
+            color: white;
+            padding: 12px 16px;
+            border-radius: 8px;
+            font-size: 0.9em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 5px;
+            width: calc(100% - 10px);
+            text-align: left;
+            display: block;
+        }
+        
+        .example-button:hover {
+            background: rgba(255,255,255,0.3);
+            transform: translateY(-1px);
+        }
+        
+        .example-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .feature-support {
+            background: rgba(255, 193, 7, 0.2);
+            border: 1px solid rgba(255, 193, 7, 0.4);
+            border-radius: 8px;
+            padding: 10px;
+            margin-top: 15px;
+            font-size: 0.8em;
+        }
+        
+        .support-list {
+            margin-top: 10px;
+        }
+        
+        .support-item {
+            display: flex;
+            justify-content: space-between;
+            margin: 2px 0;
+        }
+        
+        .supported {
+            color: #4CAF50;
+        }
+        
+        .not-supported {
+            color: #f44336;
+        }
+        
+        .footer {
+            padding: 20px;
+            text-align: center;
+            font-size: 0.8em;
+            opacity: 0.7;
+            background: rgba(0,0,0,0.1);
+            margin-top: 40px;
+        }
+        
+        @media (max-width: 768px) {
+            .examples-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .main-content {
+                padding: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="title">� Notification Examples</div>
+        <div class="subtitle">Test all notification API options and features</div>
+    </div>
+    
+    <div class="main-content">
+        <div class="permission-section">
+            <div class="permission-status" id="permissionStatus">Checking notification support...</div>
+            <button class="permission-button" id="enableButton" onclick="requestPermission()">Enable Notifications</button>
+        </div>
+        
+        <div class="examples-grid">
+            <!-- Basic Visual Options -->
+            <div class="example-section">
+                <div class="section-title">📱 Basic Visual Options</div>
+                
+                <button class="example-button" onclick="showBasicNotification()">
+                    Basic Title & Body
+                </button>
+                
+                <button class="example-button" onclick="showLongTextNotification()">
+                    Long Title & Body Text
+                </button>
+                
+                <button class="example-button" onclick="showIconNotification()">
+                    With Icon
+                </button>
+                
+                <button class="example-button" onclick="showBadgeNotification()">
+                    With Badge
+                </button>
+                
+                <button class="example-button" onclick="showImageNotification()">
+                    With Large Image
+                </button>
+            </div>
+            
+            <!-- Action Buttons -->
+            <div class="example-section">
+                <div class="section-title">🎯 Action Buttons</div>
+                
+                <button class="example-button" onclick="showActionsNotification()">
+                    With Action Buttons
+                </button>
+                
+                <button class="example-button" onclick="showMaxActionsNotification()">
+                    Maximum Actions Test
+                </button>
+            </div>
+            
+            <!-- Behavioral Options -->
+            <div class="example-section">
+                <div class="section-title">⚙️ Behavioral Options</div>
+                
+                <button class="example-button" onclick="showTagNotification()">
+                    Tagged Notification
+                </button>
+                
+                <button class="example-button" onclick="showRenotifyNotification()">
+                    Renotify (with sound)
+                </button>
+                
+                <button class="example-button" onclick="showSilentNotification()">
+                    Silent Notification
+                </button>
+                
+                <button class="example-button" onclick="showRequireInteractionNotification()">
+                    Require Interaction
+                </button>
+                
+                <button class="example-button" onclick="showTimestampNotification()">
+                    With Timestamp
+                </button>
+            </div>
+            
+            <!-- Mobile Features -->
+            <div class="example-section">
+                <div class="section-title">📱 Mobile Features</div>
+                
+                <button class="example-button" onclick="showVibrateNotification()">
+                    With Vibration Pattern
+                </button>
+                
+                <button class="example-button" onclick="showDirectionNotification()">
+                    RTL Text Direction
+                </button>
+                
+                <button class="example-button" onclick="showDataNotification()">
+                    With Custom Data
+                </button>
+            </div>
+            
+            <!-- Advanced Examples -->
+            <div class="example-section">
+                <div class="section-title">🚀 Advanced Examples</div>
+                
+                <button class="example-button" onclick="showComprehensiveNotification()">
+                    All Features Combined
+                </button>
+                
+                <button class="example-button" onclick="showChatNotification()">
+                    Chat Message Style
+                </button>
+                
+                <button class="example-button" onclick="showNewsNotification()">
+                    News Article Style
+                </button>
+                
+                <button class="example-button" onclick="showReminderNotification()">
+                    Reminder Style
+                </button>
+            </div>
+        </div>
+        
+        <!-- Feature Support Info -->
+        <div class="example-section">
+            <div class="section-title">🔍 Browser Feature Support</div>
+            <div class="feature-support">
+                <div><strong>Your browser supports:</strong></div>
+                <div class="support-list" id="featureSupport">
+                    Checking features...
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="footer">
+        Notification Examples • Based on Web Push Book
+    </div>
+
+    <script>
+        let serviceWorkerRegistration = null;
+        
+        // Initialize page
+        async function init() {
+            await registerServiceWorker();
+            checkNotificationSupport();
+            checkFeatureSupport();
+        }
+        
+        // Register Service Worker
+        async function registerServiceWorker() {
+            if (!('serviceWorker' in navigator)) {
+                return;
+            }
+            
+            try {
+                const swCode = `
+                    self.addEventListener('notificationclick', function(event) {
+                        console.log('[SW] Notification clicked:', event);
+                        event.notification.close();
+                        
+                        if (event.action) {
+                            console.log('[SW] Action clicked:', event.action);
+                            
+                            switch (event.action) {
+                                case 'reply':
+                                    console.log('User wants to reply');
+                                    break;
+                                case 'view':
+                                    console.log('User wants to view');
+                                    break;
+                                case 'dismiss':
+                                    console.log('User dismissed');
+                                    break;
+                                case 'like':
+                                    console.log('User liked');
+                                    break;
+                                case 'share':
+                                    console.log('User wants to share');
+                                    break;
+                                default:
+                                    console.log('Unknown action:', event.action);
+                            }
+                        }
+                        
+                        // Focus or open window
+                        event.waitUntil(
+                            clients.matchAll({type: 'window', includeUncontrolled: true})
+                                .then(clientList => {
+                                    if (clientList.length > 0) {
+                                        return clientList[0].focus();
+                                    }
+                                    return clients.openWindow('/app/tasks.html');
+                                })
+                        );
+                    });
+                    
+                    self.addEventListener('notificationclose', function(event) {
+                        console.log('[SW] Notification closed:', event);
+                    });
+                `;
+                
+                const blob = new Blob([swCode], { type: 'application/javascript' });
+                const swUrl = URL.createObjectURL(blob);
+                
+                const registration = await navigator.serviceWorker.register(swUrl);
+                serviceWorkerRegistration = await navigator.serviceWorker.ready;
+                
+                URL.revokeObjectURL(swUrl);
+                console.log('Service Worker registered for notification examples');
+            } catch (error) {
+                console.error('Service Worker registration failed:', error);
+            }
+        }
+        
+        // Check notification support
+        function checkNotificationSupport() {
+            const statusEl = document.getElementById('permissionStatus');
+            const buttonEl = document.getElementById('enableButton');
+            
+            if (!('Notification' in window)) {
+                statusEl.textContent = '❌ Notifications not supported in this browser';
+                buttonEl.disabled = true;
+                disableAllButtons();
+                return;
+            }
+            
+            switch (Notification.permission) {
+                case 'granted':
+                    statusEl.textContent = '✅ Notifications enabled - Ready to test!';
+                    buttonEl.style.display = 'none';
+                    enableAllButtons();
+                    break;
+                case 'denied':
+                    statusEl.textContent = '❌ Notifications blocked - Please enable in browser settings';
+                    buttonEl.disabled = true;
+                    disableAllButtons();
+                    break;
+                default:
+                    statusEl.textContent = '⚠️ Click to enable notifications for testing';
+                    buttonEl.disabled = false;
+                    disableAllButtons();
+                    break;
+            }
+        }
+        
+        // Request notification permission
+        async function requestPermission() {
+            const permission = await Notification.requestPermission();
+            checkNotificationSupport();
+        }
+        
+        // Check feature support
+        function checkFeatureSupport() {
+            const supportEl = document.getElementById('featureSupport');
+            const features = ['actions', 'badge', 'image', 'icon', 'lang', 'renotify', 'requireInteraction', 'silent', 'tag', 'timestamp', 'vibrate'];
+            
+            let html = '';
+            features.forEach(feature => {
+                const supported = feature in Notification.prototype;
+                const status = supported ? '✅' : '❌';
+                const className = supported ? 'supported' : 'not-supported';
+                html += `<div class="support-item"><span>${feature}</span><span class="${className}">${status}</span></div>`;
+            });
+            
+            if ('maxActions' in Notification) {
+                html += `<div class="support-item"><span>Max Actions</span><span class="supported">${Notification.maxActions}</span></div>`;
+            }
+            
+            supportEl.innerHTML = html;
+        }
+        
+        // Enable/disable buttons
+        function enableAllButtons() {
+            document.querySelectorAll('.example-button').forEach(btn => btn.disabled = false);
+        }
+        
+        function disableAllButtons() {
+            document.querySelectorAll('.example-button').forEach(btn => btn.disabled = true);
+        }
+          // Notification helper function
+        async function showNotification(title, options) {
+            if (Notification.permission !== 'granted') {
+                alert('Please enable notifications first!');
+                return;
+            }
+            
+            if (serviceWorkerRegistration) {
+                await serviceWorkerRegistration.showNotification(title, options);
+            } else {
+                new Notification(title, options);
+            }
+        }
+        
+        // === BASIC VISUAL OPTIONS ===
+        
+        async function showBasicNotification() {
+            const title = 'Simple Title';
+            const options = {
+                body: 'Simple piece of body text.\nSecond line of body text 👍'
+            };
+            await showNotification(title, options);
+        }
+        
+        async function showLongTextNotification() {
+            const title = 'Lorem Ipsum Dolor Sit Amet Consectetur Adipiscing Elit Sed Do Eiusmod Tempor Incididunt';
+            const options = {
+                body: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.'
+            };
+            await showNotification(title, options);
+        }
+        
+        async function showIconNotification() {
+            const title = 'Icon Notification';
+            const options = {
+                body: 'Notification with a custom icon',
+                icon: 'data:image/svg+xml;base64,' + btoa('<svg xmlns="http://www.w3.org/2000/svg" width="192" height="192" viewBox="0 0 24 24" fill="none"><rect width="24" height="24" fill="#2196F3" rx="4"/><path d="m9 12 2 2 4-4" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>')
+            };
+            await showNotification(title, options);
+        }
+        
+        async function showBadgeNotification() {
+            const title = 'Badge Notification';
+            const options = {
+                body: 'Notification with a badge (small monochrome icon)',
+                badge: 'data:image/svg+xml;base64,' + btoa('<svg xmlns="http://www.w3.org/2000/svg" width="72" height="72" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" fill="black"/><path d="m9 12 2 2 4-4" stroke="white" stroke-width="2"/></svg>')
+            };
+            await showNotification(title, options);
+        }
+        
+        async function showImageNotification() {
+            const title = 'Image Notification';
+            const options = {
+                body: 'Notification with a large image preview',
+                image: 'data:image/svg+xml;base64,' + btoa('<svg xmlns="http://www.w3.org/2000/svg" width="600" height="300" viewBox="0 0 600 300"><defs><linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:#667eea;stop-opacity:1" /><stop offset="100%" style="stop-color:#764ba2;stop-opacity:1" /></linearGradient></defs><rect width="600" height="300" fill="url(#grad)"/><text x="300" y="150" text-anchor="middle" fill="white" font-size="40">📸 Sample Image</text></svg>'),
+                icon: 'data:image/svg+xml;base64,' + btoa('<svg xmlns="http://www.w3.org/2000/svg" width="192" height="192" viewBox="0 0 24 24" fill="none"><rect width="24" height="24" fill="#2196F3" rx="4"/><path d="m9 12 2 2 4-4" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>')
+            };
+            await showNotification(title, options);
+        }
+        
+        // === ACTION BUTTONS ===
+        
+        async function showActionsNotification() {
+            const title = 'Actions Notification';
+            const options = {
+                body: 'Notification with action buttons',
+                actions: [
+                    {
+                        action: 'reply',
+                        title: 'Reply',
+                        icon: 'data:image/svg+xml;base64,' + btoa('<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#333333" stroke-width="2"><path d="m3 21 1.9-5.7a8.5 8.5 0 1 1 3.8 3.8L3 21"/></svg>')
+                    },
+                    {
+                        action: 'view',
+                        title: 'View',
+                        icon: 'data:image/svg+xml;base64,' + btoa('<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#333333" stroke-width="2"><path d="M2 12s3-9 10-9 10 9 10 9-3 9-10 9-10-9-10-9Z"/><circle cx="12" cy="12" r="3"/></svg>')
+                    }
+                ],
+                icon: 'data:image/svg+xml;base64,' + btoa('<svg xmlns="http://www.w3.org/2000/svg" width="192" height="192" viewBox="0 0 24 24" fill="none"><rect width="24" height="24" fill="#2196F3" rx="4"/><path d="m9 12 2 2 4-4" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>')
+            };
+            await showNotification(title, options);
+        }
+        
+        async function showMaxActionsNotification() {
+            const maxActions = Notification.maxActions || 4;
+            const title = 'Maximum Actions Test';
+            const actions = [
+                { action: 'like', title: 'Like', icon: 'data:image/svg+xml;base64,' + btoa('<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#333333" stroke-width="2"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/></svg>') },
+                { action: 'share', title: 'Share', icon: 'data:image/svg+xml;base64,' + btoa('<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#333333" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>') },
+                { action: 'reply', title: 'Reply', icon: 'data:image/svg+xml;base64,' + btoa('<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#333333" stroke-width="2"><path d="m3 21 1.9-5.7a8.5 8.5 0 1 1 3.8 3.8L3 21"/></svg>') },
+                { action: 'dismiss', title: 'Dismiss', icon: 'data:image/svg+xml;base64,' + btoa('<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#333333" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>') }
+            ].slice(0, maxActions);
+            
+            const options = {
+                body: `This notification displays ${Math.min(4, maxActions)} actions (max supported: ${maxActions})`,
+                actions: actions,
+                icon: 'data:image/svg+xml;base64,' + btoa('<svg xmlns="http://www.w3.org/2000/svg" width="192" height="192" viewBox="0 0 24 24" fill="none"><rect width="24" height="24" fill="#2196F3" rx="4"/><path d="m9 12 2 2 4-4" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>')
+            };
+            await showNotification(title, options);
+        }
+        
+        // === BEHAVIORAL OPTIONS ===
+        
+        async function showTagNotification() {
+            const title = 'Tagged Notification';
+            const options = {
+                body: 'This notification has a tag. Try clicking multiple times!',
+                tag: 'notification-tag-demo',
+                icon: 'data:image/svg+xml;base64,' + btoa('<svg xmlns="http://www.w3.org/2000/svg" width="192" height="192" viewBox="0 0 24 24" fill="none"><rect width="24" height="24" fill="#2196F3" rx="4"/><path d="m9 12 2 2 4-4" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>')
+            };
+            await showNotification(title, options);
+        }
+        
+        async function showRenotifyNotification() {
+            const title = 'Renotify Notification';
+            const options = {
+                body: 'This notification will play sound/vibrate even when replacing previous one',
+                tag: 'renotify-demo',
+                renotify: true,
+                vibrate: [200, 100, 200],
+                icon: 'data:image/svg+xml;base64,' + btoa('<svg xmlns="http://www.w3.org/2000/svg" width="192" height="192" viewBox="0 0 24 24" fill="none"><rect width="24" height="24" fill="#FF9800" rx="4"/><path d="M12 6v6l4 4" stroke="white" stroke-width="2" stroke-linecap="round"/></svg>')
+            };
+            await showNotification(title, options);
+        }
+        
+        async function showSilentNotification() {
+            const title = 'Silent Notification';
+            const options = {
+                body: 'This notification is silent (no sound or vibration)',
+                silent: true,
+                icon: 'data:image/svg+xml;base64,' + btoa('<svg xmlns="http://www.w3.org/2000/svg" width="192" height="192" viewBox="0 0 24 24" fill="none"><rect width="24" height="24" fill="#757575" rx="4"/><path d="M11 5L6 9H2v6h4l5 4V5z" stroke="white" stroke-width="1.5"/><path d="m23 9-6 6m0-6 6 6" stroke="white" stroke-width="1.5"/></svg>')
+            };
+            await showNotification(title, options);
+        }
+        
+        async function showRequireInteractionNotification() {
+            const title = 'Persistent Notification';
+            const options = {
+                body: 'This notification requires user interaction to dismiss',
+                requireInteraction: true,
+                icon: 'data:image/svg+xml;base64,' + btoa('<svg xmlns="http://www.w3.org/2000/svg" width="192" height="192" viewBox="0 0 24 24" fill="none"><rect width="24" height="24" fill="#F44336" rx="4"/><path d="M12 8v4m0 4h.01" stroke="white" stroke-width="2" stroke-linecap="round"/></svg>')
+            };
+            await showNotification(title, options);
+        }
+        
+        async function showTimestampNotification() {
+            const title = 'Timestamped Notification';
+            const pastTime = Date.now() - (2 * 60 * 60 * 1000); // 2 hours ago
+            const options = {
+                body: 'This notification is timestamped 2 hours ago',
+                timestamp: pastTime,
+                icon: 'data:image/svg+xml;base64,' + btoa('<svg xmlns="http://www.w3.org/2000/svg" width="192" height="192" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="#2196F3" stroke-width="2" fill="#f5f5f5"/><path d="m12 6 0 6 4 4" stroke="#2196F3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>')
+            };
+            await showNotification(title, options);
+        }
+        
+        // === MOBILE FEATURES ===
+        
+        async function showVibrateNotification() {
+            const title = 'Vibration Notification';
+            const options = {
+                body: 'This notification has a custom vibration pattern (Star Wars theme)',
+                vibrate: [500, 110, 500, 110, 450, 110, 200, 110, 170, 40, 450, 110, 200, 110, 170, 40, 500],
+                icon: 'data:image/svg+xml;base64,' + btoa('<svg xmlns="http://www.w3.org/2000/svg" width="192" height="192" viewBox="0 0 24 24" fill="none"><rect width="24" height="24" fill="#9C27B0" rx="4"/><path d="M5 12h3v8h-3V12ZM16 12h3v8h-3V12ZM9 4h6v16H9V4Z" fill="white"/></svg>')
+            };
+            await showNotification(title, options);
+        }
+        
+        async function showDirectionNotification() {
+            const title = 'اتجاه النص من اليمين إلى اليسار';
+            const options = {
+                body: 'هذا الإشعار يستخدم النص العربي لاختبار اتجاه النص من اليمين إلى اليسار',
+                dir: 'rtl',
+                actions: [
+                    { action: 'reply', title: 'رد' },
+                    { action: 'dismiss', title: 'إغلاق' }
+                ],
+                icon: 'data:image/svg+xml;base64,' + btoa('<svg xmlns="http://www.w3.org/2000/svg" width="192" height="192" viewBox="0 0 24 24" fill="none"><rect width="24" height="24" fill="#009688" rx="4"/><path d="M4 12h8m0-4l-4 4 4 4" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>')
+            };
+            await showNotification(title, options);
+        }
+        
+        async function showDataNotification() {
+            const title = 'Data Notification';
+            const customData = {
+                userId: 12345,
+                messageId: 'msg_789',
+                action: 'message_received',
+                metadata: {
+                    sender: 'John Doe',
+                    timestamp: Date.now(),
+                    priority: 'high'
+                }
+            };
+            
+            const options = {
+                body: 'This notification contains custom data (check console)',
+                data: customData,
+                icon: 'data:image/svg+xml;base64,' + btoa('<svg xmlns="http://www.w3.org/2000/svg" width="192" height="192" viewBox="0 0 24 24" fill="none"><rect width="24" height="24" fill="#607D8B" rx="4"/><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z" stroke="white" stroke-width="2"/><path d="M14 2v4a2 2 0 0 0 2 2h4" stroke="white" stroke-width="2"/></svg>')
+            };
+            
+            console.log('Custom notification data:', customData);
+            await showNotification(title, options);
+        }
+        
+        // === ADVANCED EXAMPLES ===
+        
+        async function showComprehensiveNotification() {
+            const title = '🚀 Comprehensive Example';
+            const options = {
+                body: 'This notification uses multiple features combined',
+                icon: 'data:image/svg+xml;base64,' + btoa('<svg xmlns="http://www.w3.org/2000/svg" width="192" height="192" viewBox="0 0 24 24" fill="none"><rect width="24" height="24" fill="#4CAF50" rx="4"/><path d="m9 12 2 2 4-4" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>'),
+                badge: 'data:image/svg+xml;base64,' + btoa('<svg xmlns="http://www.w3.org/2000/svg" width="72" height="72" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" fill="#4CAF50"/><text x="12" y="16" text-anchor="middle" fill="white" font-size="12">1</text></svg>'),
+                image: 'data:image/svg+xml;base64,' + btoa('<svg xmlns="http://www.w3.org/2000/svg" width="600" height="300" viewBox="0 0 600 300"><defs><linearGradient id="grad2" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:#4CAF50;stop-opacity:1" /><stop offset="100%" style="stop-color:#2196F3;stop-opacity:1" /></linearGradient></defs><rect width="600" height="300" fill="url(#grad2)"/><text x="300" y="150" text-anchor="middle" fill="white" font-size="36">🚀 All Features</text></svg>'),
+                actions: [
+                    { action: 'view', title: 'View' },
+                    { action: 'dismiss', title: 'Dismiss' }
+                ],
+                tag: 'comprehensive-demo',
+                renotify: false,
+                requireInteraction: false,
+                silent: false,
+                vibrate: [200, 100, 200],
+                timestamp: Date.now(),
+                data: {
+                    type: 'comprehensive',
+                    features: ['icon', 'badge', 'image', 'actions', 'vibrate', 'timestamp', 'data']
+                }
+            };
+            await showNotification(title, options);
+        }
+        
+        async function showChatNotification() {
+            const title = 'John Doe';
+            const options = {
+                body: 'Hey! Are you free for lunch today? 🍕',
+                icon: 'data:image/svg+xml;base64,' + btoa('<svg xmlns="http://www.w3.org/2000/svg" width="192" height="192" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" fill="#4fa94d"/><path d="M8 14s1.5 2 4 2 4-2 4-2" stroke="white" stroke-width="2" fill="none"/><circle cx="9" cy="9" r="1" fill="white"/><circle cx="15" cy="9" r="1" fill="white"/></svg>'),
+                badge: 'data:image/svg+xml;base64,' + btoa('<svg xmlns="http://www.w3.org/2000/svg" width="72" height="72" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" fill="#4fa94d"/><text x="12" y="16" text-anchor="middle" fill="white" font-size="12">1</text></svg>'),
+                actions: [
+                    { action: 'reply', title: 'Reply' }
+                ],
+                tag: 'chat-john-doe',
+                vibrate: [100, 50, 100],
+                timestamp: Date.now(),
+                data: { type: 'chat', userId: 'john_doe', messageId: '12345' }
+            };
+            await showNotification(title, options);
+        }
+        
+        async function showNewsNotification() {
+            const title = 'Breaking News';
+            const options = {
+                body: 'Major breakthrough in quantum computing announced by researchers',
+                icon: 'data:image/svg+xml;base64,' + btoa('<svg xmlns="http://www.w3.org/2000/svg" width="192" height="192" viewBox="0 0 24 24" fill="none"><rect width="24" height="24" fill="#FF5722" rx="4"/><path d="M4 22h16a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2H10a2 2 0 0 1-2-2V3a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v17a2 2 0 0 0 2 2Z" stroke="white" stroke-width="1.5" fill="none"/><path d="M8 10h8m-8 3h8m-8 3h4" stroke="white" stroke-width="1.5"/></svg>'),
+                image: 'data:image/svg+xml;base64,' + btoa('<svg xmlns="http://www.w3.org/2000/svg" width="600" height="300" viewBox="0 0 600 300"><defs><linearGradient id="newsGrad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:#FF5722;stop-opacity:1" /><stop offset="100%" style="stop-color:#D32F2F;stop-opacity:1" /></linearGradient></defs><rect width="600" height="300" fill="url(#newsGrad)"/><text x="300" y="150" text-anchor="middle" fill="white" font-size="36">📰 Breaking News</text></svg>'),
+                actions: [
+                    { action: 'view', title: 'Read Article' },
+                    { action: 'share', title: 'Share' }
+                ],
+                tag: 'breaking-news',
+                requireInteraction: true,
+                vibrate: [300, 200, 300],
+                timestamp: Date.now(),
+                data: { type: 'news', category: 'technology', articleId: 'quantum-2025' }
+            };
+            await showNotification(title, options);
+        }
+        
+        async function showReminderNotification() {
+            const title = '⏰ Meeting Reminder';
+            const options = {
+                body: 'Team standup meeting starts in 5 minutes',
+                icon: 'data:image/svg+xml;base64,' + btoa('<svg xmlns="http://www.w3.org/2000/svg" width="192" height="192" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="#FF9800" stroke-width="2" fill="#FFFFFF"/><path d="m12 6 0 6 4 4" stroke="#FF9800" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>'),
+                actions: [
+                    { action: 'view', title: 'Join Meeting' },
+                    { action: 'dismiss', title: 'Snooze 5m' }
+                ],
+                tag: 'meeting-reminder',
+                requireInteraction: true,
+                vibrate: [200, 100, 200, 100, 200],
+                timestamp: Date.now() + (5 * 60 * 1000), // 5 minutes from now
+                data: { type: 'reminder', eventId: 'standup-2025', snoozeTime: 5 }
+            };
+            await showNotification(title, options);
+        }
+        
+        // Initialize when page loads
+        window.addEventListener('load', init);
