@@ -331,11 +331,11 @@
         Time Notifier App • Native Notifications
     </div>
 
-    <script>
-        let notificationInterval = null;
+    <script>        let notificationInterval = null;
         let notificationCount = 0;
         let startTime = null;
         let uptimeInterval = null;
+        let serviceWorkerRegistration = null;
         
         // Elements
         const currentTimeEl = document.getElementById('currentTime');
@@ -349,6 +349,60 @@
         const failureReason = document.getElementById('failureReason');
         const failureDetails = document.getElementById('failureDetails');
         const failureSolution = document.getElementById('failureSolution');
+        
+        // Register Service Worker for notifications
+        async function registerServiceWorker() {
+            if (!('serviceWorker' in navigator)) {
+                throw new Error('Service Workers not supported in this browser');
+            }
+            
+            try {
+                // Create a simple service worker inline
+                const swCode = `
+                    self.addEventListener('push', function(event) {
+                        console.log('[SW] Push received');
+                    });
+                    
+                    self.addEventListener('notificationclick', function(event) {
+                        console.log('[SW] Notification clicked');
+                        event.notification.close();
+                        
+                        // Focus or open the app window
+                        event.waitUntil(
+                            clients.matchAll({
+                                type: 'window',
+                                includeUncontrolled: true
+                            }).then(function(clientList) {
+                                if (clientList.length > 0) {
+                                    return clientList[0].focus();
+                                }
+                                return clients.openWindow('/');
+                            })
+                        );
+                    });
+                    
+                    self.addEventListener('notificationclose', function(event) {
+                        console.log('[SW] Notification closed');
+                    });
+                `;
+                
+                const blob = new Blob([swCode], { type: 'application/javascript' });
+                const swUrl = URL.createObjectURL(blob);
+                
+                serviceWorkerRegistration = await navigator.serviceWorker.register(swUrl);
+                console.log('Service Worker registered successfully:', serviceWorkerRegistration);
+                
+                // Wait for the service worker to be ready
+                await navigator.serviceWorker.ready;
+                console.log('Service Worker is ready');
+                
+                return serviceWorkerRegistration;
+                
+            } catch (error) {
+                console.error('Service Worker registration failed:', error);
+                throw error;
+            }
+        }
         
         // Update current time display
         function updateTimeDisplay() {
@@ -364,55 +418,81 @@
             currentTimeEl.textContent = timeString;
             currentDateEl.textContent = dateString;
         }
-        
-        // Send time notification
-        function sendTimeNotification() {
-            if (Notification.permission === 'granted') {
+          // Send time notification using Service Worker
+        async function sendTimeNotification() {
+            if (Notification.permission !== 'granted') {
+                showNotificationFailure(
+                    'Permission Not Granted', 
+                    'Notifications are not allowed for this website',
+                    'Grant notification permission and try again'
+                );
+                stopNotifications();
+                return;
+            }
+            
+            if (!serviceWorkerRegistration) {
+                showNotificationFailure(
+                    'Service Worker Not Ready', 
+                    'Service Worker is not registered or ready',
+                    'Try reloading the page and starting notifications again'
+                );
+                stopNotifications();
+                return;
+            }
+            
+            try {
                 const now = new Date();
                 const timeString = now.toLocaleTimeString();
                 const dateString = now.toLocaleDateString();
                 
-                try {
-                    const notification = new Notification('⏰ Time Update', {
-                        body: `Current time: ${timeString}\n${dateString}`,
-                        icon: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNDAiIGhlaWdodD0iMjQwIj48cmVjdCB3aWR0aD0iMjQwIiBoZWlnaHQ9IjI0MCIgZmlsbD0iIzIxOTZGMyIvPjx0ZXh0IHg9IjEyMCIgeT0iMTIwIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj7ijrA8L3RleHQ+PC9zdmc+',
-                        tag: 'time-notification',
-                        requireInteraction: false,
-                        silent: false
-                    });
-                    
-                    // Auto close after 3 seconds
-                    setTimeout(() => {
-                        notification.close();
-                    }, 3000);
-                    
-                    // Update count
-                    notificationCount++;
-                    notificationCountEl.textContent = notificationCount;
-                    
-                    console.log('Time notification sent:', timeString);
-                      } catch (error) {
-                    console.error('Failed to send notification:', error);
-                    showNotificationFailure('Notification Creation Failed', error.message, 'Check browser settings and try again');
-                    updateStatus('error', 'Notification failed');
-                }            } else {
-                console.warn('Notification permission not granted');
-                stopNotifications();
+                const notificationOptions = {
+                    body: `Current time: ${timeString}\n${dateString}`,
+                    icon: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNDAiIGhlaWdodD0iMjQwIj48cmVjdCB3aWR0aD0iMjQwIiBoZWlnaHQ9IjI0MCIgZmlsbD0iIzIxOTZGMyIvPjx0ZXh0IHg9IjEyMCIgeT0iMTIwIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSJ3aGl0ZSIgZm9udC1zaXplPSI2MCI+4o6wPC90ZXh0Pjwvc3ZnPg==',
+                    badge: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI5NiIgaGVpZ2h0PSI5NiI+PHJlY3Qgd2lkdGg9Ijk2IiBoZWlnaHQ9Ijk2IiBmaWxsPSIjMjE5NkYzIi8+PHRleHQgeD0iNDgiIHk9IjQ4IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSJ3aGl0ZSIgZm9udC1zaXplPSIyNCI+4o6wPC90ZXh0Pjwvc3ZnPg==',
+                    tag: 'time-notification',
+                    requireInteraction: false,
+                    silent: false,
+                    vibrate: [200, 100, 200],
+                    data: {
+                        timestamp: now.getTime(),
+                        type: 'time-update'
+                    }
+                };
+                
+                // Use Service Worker to show notification
+                await serviceWorkerRegistration.showNotification('⏰ Time Update', notificationOptions);
+                
+                // Update count
+                notificationCount++;
+                notificationCountEl.textContent = notificationCount;
+                
+                console.log('Service Worker notification sent:', timeString);
+                
+                // Hide any previous failure messages
+                hideNotificationFailure();
+                
+            } catch (error) {
+                console.error('Failed to send Service Worker notification:', error);
                 showNotificationFailure(
-                    'Permission Not Granted', 
-                    'Notifications are not allowed for this website',
-                    'Go to browser settings → Site permissions → Notifications and allow for this site'
+                    'Service Worker Notification Failed', 
+                    `Error: ${error.message}`,
+                    'Check browser console for details and try restarting the app'
                 );
-                updateStatus('inactive', 'Permission denied');
+                updateStatus('error', 'Notification failed');
             }
         }
-        
-        // Start notifications
-        function startNotifications() {
-            if (Notification.permission === 'granted') {
-                beginNotifications();
-            } else if (Notification.permission === 'default') {
-                Notification.requestPermission().then(permission => {                    if (permission === 'granted') {
+          // Start notifications
+        async function startNotifications() {
+            try {
+                // First register Service Worker
+                updateStatus('inactive', 'Registering Service Worker...');
+                await registerServiceWorker();
+                
+                if (Notification.permission === 'granted') {
+                    beginNotifications();
+                } else if (Notification.permission === 'default') {
+                    const permission = await Notification.requestPermission();
+                    if (permission === 'granted') {
                         beginNotifications();
                     } else {
                         showNotificationFailure(
@@ -422,13 +502,22 @@
                         );
                         updateStatus('inactive', 'Permission denied');
                     }
-                });            } else {
+                } else {
+                    showNotificationFailure(
+                        'Notifications Blocked', 
+                        'Notifications are permanently blocked for this site',
+                        'Go to browser settings → Privacy & Security → Notifications → Manage exceptions and remove this site, then refresh'
+                    );
+                    updateStatus('inactive', 'Notifications blocked');
+                }
+            } catch (error) {
+                console.error('Failed to start notifications:', error);
                 showNotificationFailure(
-                    'Notifications Blocked', 
-                    'Notifications are permanently blocked for this site',
-                    'Go to browser settings → Privacy & Security → Notifications → Manage exceptions and remove this site, then refresh'
+                    'Service Worker Registration Failed', 
+                    `Error: ${error.message}`,
+                    'This browser may not support Service Workers. Try using Chrome, Firefox, or Edge'
                 );
-                updateStatus('inactive', 'Notifications blocked');
+                updateStatus('inactive', 'Service Worker failed');
             }
         }
           // Begin the notification process
