@@ -190,8 +190,7 @@
             opacity: 0.7;
             background: rgba(0,0,0,0.1);
         }
-        
-        .permission-prompt {
+          .permission-prompt {
             background: rgba(255,193,7,0.9);
             color: #333;
             padding: 15px;
@@ -199,6 +198,63 @@
             margin: 20px;
             text-align: center;
             font-weight: 500;
+        }
+        
+        .failure-section {
+            background: rgba(244, 67, 54, 0.15);
+            border: 1px solid rgba(244, 67, 54, 0.3);
+            border-radius: 15px;
+            padding: 20px;
+            margin: 20px 0;
+            width: 100%;
+            max-width: 350px;
+            animation: slideIn 0.3s ease-out;
+        }
+        
+        .failure-header {
+            font-size: 1.1em;
+            font-weight: 600;
+            margin-bottom: 15px;
+            text-align: center;
+            color: #ffcdd2;
+        }
+        
+        .failure-content {
+            text-align: left;
+        }
+        
+        .failure-reason {
+            background: rgba(255,255,255,0.1);
+            border-radius: 8px;
+            padding: 10px;
+            margin-bottom: 10px;
+            font-weight: 500;
+            font-size: 0.9em;
+        }
+        
+        .failure-details {
+            background: rgba(255,255,255,0.05);
+            border-radius: 8px;
+            padding: 10px;
+            margin-bottom: 10px;
+            font-size: 0.8em;
+            opacity: 0.9;
+            line-height: 1.4;
+        }
+        
+        .failure-solution {
+            background: rgba(76, 175, 80, 0.2);
+            border: 1px solid rgba(76, 175, 80, 0.3);
+            border-radius: 8px;
+            padding: 10px;
+            font-size: 0.8em;
+            color: #c8e6c9;
+            line-height: 1.4;
+        }
+        
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
         
         @media (max-width: 480px) {
@@ -248,8 +304,7 @@
                 <button class="control-button" id="stopBtn" onclick="stopNotifications()" disabled>Stop</button>
             </div>
         </div>
-        
-        <div class="stats-grid">
+          <div class="stats-grid">
             <div class="stat-item">
                 <div class="stat-value" id="notificationCount">0</div>
                 <div class="stat-label">Notifications Sent</div>
@@ -257,6 +312,17 @@
             <div class="stat-item">
                 <div class="stat-value" id="uptime">00:00</div>
                 <div class="stat-label">Uptime</div>
+            </div>
+        </div>
+        
+        <div class="failure-section" id="failureSection" style="display: none;">
+            <div class="failure-header">
+                <span>⚠️ Notification Issues</span>
+            </div>
+            <div class="failure-content">
+                <div class="failure-reason" id="failureReason">-</div>
+                <div class="failure-details" id="failureDetails">-</div>
+                <div class="failure-solution" id="failureSolution">-</div>
             </div>
         </div>
     </div>
@@ -277,9 +343,12 @@
         const statusDotEl = document.getElementById('statusDot');
         const statusTextEl = document.getElementById('statusText');
         const startBtn = document.getElementById('startBtn');
-        const stopBtn = document.getElementById('stopBtn');
-        const notificationCountEl = document.getElementById('notificationCount');
+        const stopBtn = document.getElementById('stopBtn');        const notificationCountEl = document.getElementById('notificationCount');
         const uptimeEl = document.getElementById('uptime');
+        const failureSection = document.getElementById('failureSection');
+        const failureReason = document.getElementById('failureReason');
+        const failureDetails = document.getElementById('failureDetails');
+        const failureSolution = document.getElementById('failureSolution');
         
         // Update current time display
         function updateTimeDisplay() {
@@ -322,14 +391,18 @@
                     notificationCountEl.textContent = notificationCount;
                     
                     console.log('Time notification sent:', timeString);
-                    
-                } catch (error) {
+                      } catch (error) {
                     console.error('Failed to send notification:', error);
+                    showNotificationFailure('Notification Creation Failed', error.message, 'Check browser settings and try again');
                     updateStatus('error', 'Notification failed');
-                }
-            } else {
+                }            } else {
                 console.warn('Notification permission not granted');
                 stopNotifications();
+                showNotificationFailure(
+                    'Permission Not Granted', 
+                    'Notifications are not allowed for this website',
+                    'Go to browser settings → Site permissions → Notifications and allow for this site'
+                );
                 updateStatus('inactive', 'Permission denied');
             }
         }
@@ -339,20 +412,30 @@
             if (Notification.permission === 'granted') {
                 beginNotifications();
             } else if (Notification.permission === 'default') {
-                Notification.requestPermission().then(permission => {
-                    if (permission === 'granted') {
+                Notification.requestPermission().then(permission => {                    if (permission === 'granted') {
                         beginNotifications();
                     } else {
+                        showNotificationFailure(
+                            'Permission Denied', 
+                            'User declined notification permission',
+                            'Refresh the page and click "Allow" when prompted, or enable in browser settings'
+                        );
                         updateStatus('inactive', 'Permission denied');
                     }
-                });
-            } else {
+                });            } else {
+                showNotificationFailure(
+                    'Notifications Blocked', 
+                    'Notifications are permanently blocked for this site',
+                    'Go to browser settings → Privacy & Security → Notifications → Manage exceptions and remove this site, then refresh'
+                );
                 updateStatus('inactive', 'Notifications blocked');
             }
         }
-        
-        // Begin the notification process
+          // Begin the notification process
         function beginNotifications() {
+            // Hide any previous failure messages
+            hideNotificationFailure();
+            
             // Send first notification immediately
             sendTimeNotification();
             
@@ -391,6 +474,19 @@
             console.log('Time notifications stopped');
         }
         
+        // Show notification failure details
+        function showNotificationFailure(reason, details, solution) {
+            failureReason.textContent = reason;
+            failureDetails.textContent = details;
+            failureSolution.textContent = `💡 Solution: ${solution}`;
+            failureSection.style.display = 'block';
+        }
+        
+        // Hide notification failure section
+        function hideNotificationFailure() {
+            failureSection.style.display = 'none';
+        }
+        
         // Update status display
         function updateStatus(status, text) {
             statusTextEl.textContent = text;
@@ -406,10 +502,14 @@
                 uptimeEl.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
             }
         }
-        
-        // Check notification support and permissions
+          // Check notification support and permissions
         function checkNotificationSupport() {
             if (!('Notification' in window)) {
+                showNotificationFailure(
+                    'Notifications Not Supported',
+                    'This browser does not support the Notification API',
+                    'Try using Chrome, Firefox, Safari, or Edge browser'
+                );
                 updateStatus('inactive', 'Notifications not supported');
                 startBtn.disabled = true;
                 return;
@@ -417,13 +517,20 @@
             
             switch (Notification.permission) {
                 case 'granted':
+                    hideNotificationFailure();
                     updateStatus('inactive', 'Ready to start notifications');
                     break;
                 case 'denied':
+                    showNotificationFailure(
+                        'Notifications Denied',
+                        'Notification permission has been denied for this site',
+                        'Click the lock icon in address bar → Notifications → Allow, then refresh the page'
+                    );
                     updateStatus('inactive', 'Notifications blocked');
                     startBtn.disabled = true;
                     break;
                 default:
+                    hideNotificationFailure();
                     updateStatus('inactive', 'Permission required');
                     break;
             }
