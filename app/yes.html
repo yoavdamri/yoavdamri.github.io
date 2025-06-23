@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#2196F3">
+    <meta name="description" content="A simple PWA demonstrating browser notifications with Web Push Book best practices">
+    
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="./manifest.json">
+    
+    <!-- Apple Touch Icon -->
+    <link rel="apple-touch-icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxODAiIGhlaWdodD0iMTgwIiB2aWV3Qm94PSIwIDAgMjQgMjQiIGZpbGw9Im5vbmUiPjxyZWN0IHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgZmlsbD0iIzIxOTZGMyIgcng9IjQiLz48cGF0aCBkPSJtOSAxMiAyIDIgNC00IiBzdHJva2U9IndoaXRlIiBzdHJva2Utd2lkdGg9IjIiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjwvc3ZnPg==">
+    
+    <!-- iOS meta tags -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="NotifyDemo">
+    
+    <title>Notification Demo PWA</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 40px;
+            background: #f8f9fa;
+            text-align: center;
+        }
+        
+        .container {
+            background: white;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+        
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+        
+        p {
+            color: #666;
+            margin-bottom: 30px;
+            line-height: 1.5;
+        }
+        
+        button {
+            background: #2196F3;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 10px rgba(33, 150, 243, 0.3);
+        }
+        
+        button:hover {
+            background: #1976D2;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(33, 150, 243, 0.4);
+        }
+        
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        .status {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 8px;
+            font-weight: 500;
+        }
+        
+        .status.success {
+            background: #e8f5e8;
+            color: #2e7d32;
+            border: 1px solid #4caf50;
+        }
+        
+        .status.warning {
+            background: #fff3e0;
+            color: #ef6c00;
+            border: 1px solid #ff9800;
+        }
+          .status.error {
+            background: #ffebee;
+            color: #c62828;
+            border: 1px solid #f44336;
+        }
+        
+        .install-banner {
+            background: #e3f2fd;
+            color: #1565c0;
+            border: 1px solid #2196F3;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: none;
+        }
+        
+        .install-banner button {
+            background: #1976D2;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            font-size: 14px;
+            border-radius: 6px;
+            cursor: pointer;
+            margin-left: 10px;
+        }
+        
+        .feature-list {
+            text-align: left;
+            margin: 20px 0;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid #2196F3;
+        }
+        
+        .feature-list h3 {
+            margin-top: 0;
+            color: #1976D2;
+        }
+        
+        .feature-list ul {
+            margin: 10px 0;
+        }
+        
+        .feature-list li {
+            margin: 5px 0;
+        }
+        
+        .online-status {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            padding: 8px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        
+        .online-status.online {
+            background: #4caf50;
+            color: white;
+        }
+        
+        .online-status.offline {
+            background: #f44336;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <!-- Online/Offline indicator -->
+    <div id="onlineStatus" class="online-status online">🟢 Online</div>
+    
+    <!-- Install banner -->
+    <div id="installBanner" class="install-banner">
+        📱 Install this app for the best experience!
+        <button id="installBtn">Install</button>
+        <button id="dismissInstall" style="background: #666;">Dismiss</button>
+    </div>
+    
+    <div class="container">
+        <h1>🔔 Notification Demo PWA</h1>
+        <p>Based on <strong>Web Push Book</strong> best practices</p>
+        
+        <div class="feature-list">
+            <h3>✨ PWA Features</h3>
+            <ul>
+                <li>📱 Installable on mobile and desktop</li>
+                <li>🔔 Rich notification support</li>
+                <li>🚀 Works offline with service worker</li>
+                <li>⚡ Fast loading and caching</li>
+                <li>🎨 Native app-like experience</li>
+            </ul>
+        </div>
+        
+        <button id="notificationBtn">Show Notification</button>
+        <button id="notification30sBtn">30 seconds</button>
+        
+        <div id="status" class="status" style="display: none;"></div>
+    </div>    <script>
+        const notificationBtn = document.getElementById('notificationBtn');
+        const notification30sBtn = document.getElementById('notification30sBtn');
+        const statusDiv = document.getElementById('status');
+        const installBanner = document.getElementById('installBanner');
+        const installBtn = document.getElementById('installBtn');
+        const dismissInstallBtn = document.getElementById('dismissInstall');
+        const onlineStatus = document.getElementById('onlineStatus');
+        
+        let deferredPrompt;
+        let swRegistration;
+
+        // Show status message
+        function showStatus(message, type = 'success') {
+            statusDiv.textContent = message;
+            statusDiv.className = `status ${type}`;
+            statusDiv.style.display = 'block';
+        }
+
+        // Update online/offline status
+        function updateOnlineStatus() {
+            if (navigator.onLine) {
+                onlineStatus.textContent = '🟢 Online';
+                onlineStatus.className = 'online-status online';
+            } else {
+                onlineStatus.textContent = '🔴 Offline';
+                onlineStatus.className = 'online-status offline';
+            }
+        }
+
+        // Register service worker
+        async function registerServiceWorker() {
+            if ('serviceWorker' in navigator) {
+                try {
+                    const registration = await navigator.serviceWorker.register('./sw.js');
+                    swRegistration = registration;
+                    console.log('Service Worker registered successfully:', registration);
+                    
+                    // Handle updates
+                    registration.addEventListener('updatefound', () => {
+                        const newWorker = registration.installing;
+                        newWorker.addEventListener('statechange', () => {
+                            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                                showStatus('🔄 App updated! Refresh to use the latest version.', 'warning');
+                            }
+                        });
+                    });
+                    
+                    return registration;
+                } catch (error) {
+                    console.error('Service Worker registration failed:', error);
+                    showStatus('⚠️ Service Worker registration failed', 'warning');
+                }
+            } else {
+                console.log('Service Worker not supported');
+                showStatus('⚠️ Service Worker not supported in this browser', 'warning');
+            }
+        }
+
+        // Handle PWA install
+        function handleInstallPrompt() {
+            // Listen for the beforeinstallprompt event
+            window.addEventListener('beforeinstallprompt', (e) => {
+                // Prevent the mini-infobar from appearing on mobile
+                e.preventDefault();
+                // Save the event so it can be triggered later
+                deferredPrompt = e;
+                // Show the install banner
+                installBanner.style.display = 'block';
+            });
+
+            // Handle install button click
+            installBtn.addEventListener('click', async () => {
+                if (deferredPrompt) {
+                    // Show the install prompt
+                    deferredPrompt.prompt();
+                    // Wait for the user to respond to the prompt
+                    const { outcome } = await deferredPrompt.userChoice;
+                    
+                    if (outcome === 'accepted') {
+                        showStatus('🎉 PWA installed successfully!', 'success');
+                    } else {
+                        showStatus('❌ PWA installation cancelled', 'warning');
+                    }
+                    
+                    // Clear the deferredPrompt
+                    deferredPrompt = null;
+                    installBanner.style.display = 'none';
+                }
+            });
+
+            // Handle dismiss button
+            dismissInstallBtn.addEventListener('click', () => {
+                installBanner.style.display = 'none';
+                deferredPrompt = null;
+            });
+
+            // Listen for app installed event
+            window.addEventListener('appinstalled', () => {
+                showStatus('🎉 PWA installed successfully!', 'success');
+                installBanner.style.display = 'none';
+                deferredPrompt = null;
+            });
+        }
+
+        async function show30sNotification() {
+            setTimeout(show30sNotification, 30000);
+        }
+
+        // Enhanced notification function that works with service worker
+        async function showNotification() {
+            // Check if notifications are supported
+            if (!('Notification' in window)) {
+                showStatus('❌ This browser does not support notifications', 'error');
+                return;
+            }
+
+            // Check current permission
+            if (Notification.permission === 'granted') {
+                // Use service worker if available, otherwise use direct notification
+                if (swRegistration && 'showNotification' in swRegistration) {
+                    displayServiceWorkerNotification();
+                } else {
+                    displayNotification();
+                }
+            } else if (Notification.permission === 'denied') {
+                showStatus('❌ Notifications are blocked. Please enable them in your browser settings.', 'error');
+            } else {
+                // Request permission
+                try {
+                    const permission = await Notification.requestPermission();
+                    
+                    if (permission === 'granted') {
+                        showStatus('✅ Permission granted! Showing notification...', 'success');
+                        if (swRegistration && 'showNotification' in swRegistration) {
+                            displayServiceWorkerNotification();
+                        } else {
+                            displayNotification();
+                        }
+                    } else {
+                        showStatus('⚠️ Permission denied. Cannot show notifications.', 'warning');
+                    }
+                } catch (error) {
+                    console.error('Error requesting permission:', error);
+                    showStatus('❌ Error requesting permission', 'error');
+                }
+            }
+        }
+
+        // Display notification using service worker (better for PWAs)
+        function displayServiceWorkerNotification() {
+            const title = 'PWA Notification';
+            const options = {
+                body: 'This notification is powered by a Service Worker!\nClick to interact with the app 🚀',
+                icon: 'data:image/svg+xml;base64,' + btoa(`
+                    <svg xmlns="http://www.w3.org/2000/svg" width="192" height="192" viewBox="0 0 24 24" fill="none">
+                        <rect width="24" height="24" fill="#2196F3" rx="4"/>
+                        <path d="m9 12 2 2 4-4" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M6 9V6a3 3 0 0 1 3-3h6a3 3 0 0 1 3 3v3a1 1 0 0 1-1 1h-4a1 1 0 0 1-1-1Z" fill="white" fill-opacity=".7"/>
+                    </svg>
+                `),
+                badge: 'data:image/svg+xml;base64,' + btoa(`
+                    <svg xmlns="http://www.w3.org/2000/svg" width="72" height="72" viewBox="0 0 24 24" fill="none">
+                        <circle cx="12" cy="12" r="10" fill="#2196F3"/>
+                        <text x="12" y="16" text-anchor="middle" fill="white" font-size="12">PWA</text>
+                    </svg>
+                `),
+                tag: 'pwa-demo',
+                timestamp: Date.now(),
+                requireInteraction: true,
+                actions: [
+                    {
+                        action: 'open',
+                        title: 'Open App',
+                        icon: 'data:image/svg+xml;base64,' + btoa(`
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
+                                <path d="M9 12l2 2 4-4" stroke="#2196F3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                        `)
+                    },
+                    {
+                        action: 'close',
+                        title: 'Dismiss',
+                        icon: 'data:image/svg+xml;base64,' + btoa(`
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
+                                <path d="M18 6L6 18M6 6l12 12" stroke="#666" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                        `)
+                    }
+                ]
+            };
+
+            swRegistration.showNotification(title, options);
+            showStatus('📱 Service Worker notification displayed!', 'success');
+        }        // Display the actual notification (fallback for browsers without service worker)
+        function displayNotification() {
+            const title = 'Simple Notification';
+            const options = {
+                body: 'This is a simple notification example.\nFrom Web Push Book best practices 👍',
+                icon: 'data:image/svg+xml;base64,' + btoa(`
+                    <svg xmlns="http://www.w3.org/2000/svg" width="192" height="192" viewBox="0 0 24 24" fill="none">
+                        <rect width="24" height="24" fill="#2196F3" rx="4"/>
+                        <path d="m9 12 2 2 4-4" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                `),
+                badge: 'data:image/svg+xml;base64,' + btoa(`
+                    <svg xmlns="http://www.w3.org/2000/svg" width="72" height="72" viewBox="0 0 24 24" fill="none">
+                        <circle cx="12" cy="12" r="10" fill="#2196F3"/>
+                        <text x="12" y="16" text-anchor="middle" fill="white" font-size="12">!</text>
+                    </svg>
+                `),
+                tag: 'simple-demo',
+                timestamp: Date.now(),
+                requireInteraction: false,
+                silent: false
+            };
+
+            const notification = new Notification(title, options);
+
+            // Handle notification events
+            notification.onclick = () => {
+                console.log('Notification clicked!');
+                showStatus('🖱️ Notification was clicked!', 'success');
+                window.focus();
+                notification.close();
+            };
+
+            notification.onshow = () => {
+                console.log('Notification shown');
+                showStatus('📱 Notification displayed successfully!', 'success');
+            };
+
+            notification.onerror = (error) => {
+                console.error('Notification error:', error);
+                showStatus('❌ Error displaying notification', 'error');
+            };
+
+            notification.onclose = () => {
+                console.log('Notification closed');
+            };
+        }
+
+        // Check for URL parameters (for shortcuts)
+        function checkURLParams() {
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('action') === 'notify') {
+                // Auto-trigger notification if opened via shortcut
+                setTimeout(() => {
+                    showNotification();
+                }, 1000);
+            }
+        }
+
+        // Initialize app
+        async function initApp() {
+            // Register service worker
+            await registerServiceWorker();
+            
+            // Handle PWA install prompt
+            handleInstallPrompt();
+            
+            // Set up online/offline detection
+            updateOnlineStatus();
+            window.addEventListener('online', updateOnlineStatus);
+            window.addEventListener('offline', updateOnlineStatus);
+            
+            // Check URL parameters
+            checkURLParams();
+            
+            // Check initial permission status
+            if (Notification.permission === 'granted') {
+                showStatus('✅ Notifications are already enabled. Click the button to test!', 'success');
+            } else if (Notification.permission === 'denied') {
+                showStatus('❌ Notifications are blocked. Please enable them in browser settings.', 'error');
+            } else {
+                showStatus('⚠️ Click the button to enable notifications and see the demo.', 'warning');
+            }
+        }
+
+        // Add event listeners
+        notificationBtn.addEventListener('click', showNotification);
+        notification30sBtn.addEventListener('click', show30sNotification);
+
+        // Initialize when DOM is loaded
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initApp);
+        } else {
+            initApp();
+        }
+    </script>
+</body>
+</html>
