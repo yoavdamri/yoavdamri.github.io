@@ -3,201 +3,141 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Advanced Notification Examples - Web Push Book Style</title>
+    <title>Simple Notification Example</title>
     <style>
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 20px;
-            background: #f5f5f5;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 40px;
+            background: #f8f9fa;
+            text-align: center;
         }
         
         .container {
             background: white;
-            padding: 30px;
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
         }
         
         h1 {
             color: #333;
-            margin-bottom: 30px;
+            margin-bottom: 20px;
         }
         
-        .button-group {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 15px;
-            margin: 20px 0;
+        p {
+            color: #666;
+            margin-bottom: 30px;
+            line-height: 1.5;
         }
         
         button {
             background: #2196F3;
             color: white;
             border: none;
-            padding: 12px 20px;
-            border-radius: 6px;
-            font-size: 14px;
+            padding: 15px 30px;
+            font-size: 16px;
+            border-radius: 8px;
             cursor: pointer;
             transition: all 0.3s ease;
+            box-shadow: 0 2px 10px rgba(33, 150, 243, 0.3);
         }
         
-        button:hover:not(:disabled) {
+        button:hover {
             background: #1976D2;
-            transform: translateY(-1px);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(33, 150, 243, 0.4);
         }
         
         button:disabled {
             background: #ccc;
             cursor: not-allowed;
             transform: none;
-        }
-        
-        .permission-section {
-            background: #e3f2fd;
-            padding: 20px;
-            border-radius: 8px;
-            margin-bottom: 30px;
+            box-shadow: none;
         }
         
         .status {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 8px;
             font-weight: 500;
-            margin-bottom: 15px;
         }
         
-        .feature-info {
+        .status.success {
+            background: #e8f5e8;
+            color: #2e7d32;
+            border: 1px solid #4caf50;
+        }
+        
+        .status.warning {
             background: #fff3e0;
-            padding: 15px;
-            border-radius: 6px;
-            margin-top: 20px;
-            font-size: 13px;
+            color: #ef6c00;
+            border: 1px solid #ff9800;
+        }
+        
+        .status.error {
+            background: #ffebee;
+            color: #c62828;
+            border: 1px solid #f44336;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>🔔 Advanced Browser Notifications</h1>
-        <p>Examples based on <strong>Web Push Book</strong> best practices</p>
+        <h1>🔔 Simple Notification Demo</h1>
+        <p>Based on <strong>Web Push Book</strong> best practices</p>
         
-        <div class="permission-section">
-            <div class="status" id="permissionStatus">Checking notification support...</div>
-            <button id="requestPermissionBtn">Enable Notifications</button>
-        </div>
+        <button id="notificationBtn">Show Notification</button>
+        
+        <div id="status" class="status" style="display: none;"></div>
+    </div>
 
-        <div class="button-group">
-            <!-- Basic Examples -->
-            <button id="basicNotificationBtn" disabled>Basic Title & Body</button>
-            <button id="longTextNotificationBtn" disabled>Long Text Example</button>
-            <button id="iconNotificationBtn" disabled>With Custom Icon</button>
-            <button id="badgeNotificationBtn" disabled>With Badge</button>
-            
-            <!-- Advanced Examples -->
-            <button id="actionsNotificationBtn" disabled>Action Buttons</button>
-            <button id="vibrationNotificationBtn" disabled>With Vibration</button>
-            <button id="timestampNotificationBtn" disabled>Custom Timestamp</button>
-            <button id="taggedNotificationBtn" disabled>Tagged (Replace)</button>
-            
-            <!-- Real-world Examples -->
-            <button id="chatNotificationBtn" disabled>Chat Message Style</button>
-            <button id="newsNotificationBtn" disabled>News Article Style</button>
-            <button id="reminderNotificationBtn" disabled>Meeting Reminder</button>
-            <button id="comprehensiveBtn" disabled>All Features Combined</button>
-        </div>
+    <script>
+        const notificationBtn = document.getElementById('notificationBtn');
+        const statusDiv = document.getElementById('status');
 
-        <div class="feature-info" id="featureInfo">
-            Feature support will be detected after enabling notifications
-        </div>
-    </div>    <script>
-        // Get DOM elements
-        const requestPermissionBtn = document.getElementById('requestPermissionBtn');
-        const basicNotificationBtn = document.getElementById('basicNotificationBtn');
-        const permissionStatus = document.getElementById('permissionStatus');
-        const featureInfo = document.getElementById('featureInfo');
+        // Show status message
+        function showStatus(message, type = 'success') {
+            statusDiv.textContent = message;
+            statusDiv.className = `status ${type}`;
+            statusDiv.style.display = 'block';
+        }
 
-        // Check notification support and update UI
-        function checkNotificationSupport() {
+        // Main function to handle notification
+        async function showNotification() {
+            // Check if notifications are supported
             if (!('Notification' in window)) {
-                permissionStatus.textContent = '❌ Notifications not supported in this browser';
-                requestPermissionBtn.disabled = true;
+                showStatus('❌ This browser does not support notifications', 'error');
                 return;
             }
 
-            switch (Notification.permission) {
-                case 'granted':
-                    permissionStatus.textContent = '✅ Notifications enabled - Ready to test!';
-                    requestPermissionBtn.style.display = 'none';
-                    enableNotificationButtons();
-                    showFeatureSupport();
-                    break;
-                case 'denied':
-                    permissionStatus.textContent = '❌ Notifications blocked - Enable in browser settings';
-                    requestPermissionBtn.disabled = true;
-                    break;
-                default:
-                    permissionStatus.textContent = '⚠️ Click to enable notifications';
-                    requestPermissionBtn.disabled = false;
-                    break;
-            }
-        }
-
-        // Request notification permission
-        async function requestNotificationPermission() {
-            if (!('Notification' in window)) {
-                alert('This browser does not support notifications.');
-                return;
-            }
-
-            try {
-                const permission = await Notification.requestPermission();
-                console.log('Permission result:', permission);
-                
-                if (permission === 'granted') {
-                    // Show a success notification
-                    showBasicNotification();
+            // Check current permission
+            if (Notification.permission === 'granted') {
+                // Permission already granted, show notification
+                displayNotification();
+            } else if (Notification.permission === 'denied') {
+                showStatus('❌ Notifications are blocked. Please enable them in your browser settings.', 'error');
+            } else {
+                // Request permission
+                try {
+                    const permission = await Notification.requestPermission();
+                    
+                    if (permission === 'granted') {
+                        showStatus('✅ Permission granted! Showing notification...', 'success');
+                        displayNotification();
+                    } else {
+                        showStatus('⚠️ Permission denied. Cannot show notifications.', 'warning');
+                    }
+                } catch (error) {
+                    console.error('Error requesting permission:', error);
+                    showStatus('❌ Error requesting permission', 'error');
                 }
-                
-                checkNotificationSupport();
-            } catch (error) {
-                console.error('Error requesting permission:', error);
-                alert('Error requesting notification permission');
             }
         }
 
-        // Enable notification buttons
-        function enableNotificationButtons() {
-            const buttons = document.querySelectorAll('.button-group button');
-            buttons.forEach(btn => btn.disabled = false);
-        }
-
-        // Show feature support info
-        function showFeatureSupport() {
-            const features = ['actions', 'badge', 'icon', 'image', 'vibrate', 'tag', 'timestamp'];
-            let supported = [];
-            let unsupported = [];
-
-            features.forEach(feature => {
-                if (feature in Notification.prototype) {
-                    supported.push(feature);
-                } else {
-                    unsupported.push(feature);
-                }
-            });
-
-            featureInfo.innerHTML = `
-                <strong>Browser Support:</strong><br>
-                ✅ Supported: ${supported.join(', ')}<br>
-                ${unsupported.length > 0 ? `❌ Not supported: ${unsupported.join(', ')}` : ''}
-            `;
-        }
-
-        // Simple notification example (Web Push Book style)
-        function showBasicNotification() {
-            if (Notification.permission !== 'granted') {
-                alert('Please enable notifications first!');
-                return;
-            }
-
+        // Display the actual notification (Web Push Book style)
+        function displayNotification() {
             const title = 'Simple Title';
             const options = {
                 body: 'Simple piece of body text.\nSecond line of body text 👍',
@@ -207,28 +147,56 @@
                         <path d="m9 12 2 2 4-4" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                     </svg>
                 `),
-                tag: 'basic-example',
-                timestamp: Date.now()
+                badge: 'data:image/svg+xml;base64,' + btoa(`
+                    <svg xmlns="http://www.w3.org/2000/svg" width="72" height="72" viewBox="0 0 24 24" fill="none">
+                        <circle cx="12" cy="12" r="10" fill="#2196F3"/>
+                        <text x="12" y="16" text-anchor="middle" fill="white" font-size="12">!</text>
+                    </svg>
+                `),
+                tag: 'simple-demo',
+                timestamp: Date.now(),
+                requireInteraction: false,
+                silent: false
             };
 
             const notification = new Notification(title, options);
 
-            // Handle notification click
+            // Handle notification events
             notification.onclick = () => {
-                console.log('Basic notification clicked!');
+                console.log('Notification clicked!');
+                showStatus('🖱️ Notification was clicked!', 'success');
                 window.focus();
                 notification.close();
             };
 
-            console.log('Basic notification shown:', title);
+            notification.onshow = () => {
+                console.log('Notification shown');
+                showStatus('📱 Notification displayed successfully!', 'success');
+            };
+
+            notification.onerror = (error) => {
+                console.error('Notification error:', error);
+                showStatus('❌ Error displaying notification', 'error');
+            };
+
+            notification.onclose = () => {
+                console.log('Notification closed');
+            };
         }
 
-        // Event listeners
-        requestPermissionBtn.addEventListener('click', requestNotificationPermission);
-        basicNotificationBtn.addEventListener('click', showBasicNotification);
+        // Add click event listener
+        notificationBtn.addEventListener('click', showNotification);
 
-        // Initialize on page load
-        window.addEventListener('load', checkNotificationSupport);
+        // Check initial permission status
+        window.addEventListener('load', () => {
+            if (Notification.permission === 'granted') {
+                showStatus('✅ Notifications are already enabled. Click the button to test!', 'success');
+            } else if (Notification.permission === 'denied') {
+                showStatus('❌ Notifications are blocked. Please enable them in browser settings.', 'error');
+            } else {
+                showStatus('⚠️ Click the button to enable notifications and see the demo.', 'warning');
+            }
+        });
     </script>
 </body>
 </html>
