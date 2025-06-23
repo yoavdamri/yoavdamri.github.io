@@ -3,62 +3,232 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Native Notification Example</title>
+    <title>Advanced Notification Examples - Web Push Book Style</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        h1 {
+            color: #333;
+            margin-bottom: 30px;
+        }
+        
+        .button-group {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        
+        button {
+            background: #2196F3;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 6px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        button:hover:not(:disabled) {
+            background: #1976D2;
+            transform: translateY(-1px);
+        }
+        
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .permission-section {
+            background: #e3f2fd;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+        }
+        
+        .status {
+            font-weight: 500;
+            margin-bottom: 15px;
+        }
+        
+        .feature-info {
+            background: #fff3e0;
+            padding: 15px;
+            border-radius: 6px;
+            margin-top: 20px;
+            font-size: 13px;
+        }
+    </style>
 </head>
 <body>
-    <h1>Native Browser Notifications</h1>
-    <button id="requestPermissionBtn">Request Notification Permission</button>
-    <button id="showNotificationBtn" disabled>Show Notification</button>
+    <div class="container">
+        <h1>🔔 Advanced Browser Notifications</h1>
+        <p>Examples based on <strong>Web Push Book</strong> best practices</p>
+        
+        <div class="permission-section">
+            <div class="status" id="permissionStatus">Checking notification support...</div>
+            <button id="requestPermissionBtn">Enable Notifications</button>
+        </div>
 
-    <script>
+        <div class="button-group">
+            <!-- Basic Examples -->
+            <button id="basicNotificationBtn" disabled>Basic Title & Body</button>
+            <button id="longTextNotificationBtn" disabled>Long Text Example</button>
+            <button id="iconNotificationBtn" disabled>With Custom Icon</button>
+            <button id="badgeNotificationBtn" disabled>With Badge</button>
+            
+            <!-- Advanced Examples -->
+            <button id="actionsNotificationBtn" disabled>Action Buttons</button>
+            <button id="vibrationNotificationBtn" disabled>With Vibration</button>
+            <button id="timestampNotificationBtn" disabled>Custom Timestamp</button>
+            <button id="taggedNotificationBtn" disabled>Tagged (Replace)</button>
+            
+            <!-- Real-world Examples -->
+            <button id="chatNotificationBtn" disabled>Chat Message Style</button>
+            <button id="newsNotificationBtn" disabled>News Article Style</button>
+            <button id="reminderNotificationBtn" disabled>Meeting Reminder</button>
+            <button id="comprehensiveBtn" disabled>All Features Combined</button>
+        </div>
+
+        <div class="feature-info" id="featureInfo">
+            Feature support will be detected after enabling notifications
+        </div>
+    </div>    <script>
+        // Get DOM elements
         const requestPermissionBtn = document.getElementById('requestPermissionBtn');
-        const showNotificationBtn = document.getElementById('showNotificationBtn');
+        const basicNotificationBtn = document.getElementById('basicNotificationBtn');
+        const permissionStatus = document.getElementById('permissionStatus');
+        const featureInfo = document.getElementById('featureInfo');
 
-        // Function to request notification permission
-        function requestNotificationPermission() {
+        // Check notification support and update UI
+        function checkNotificationSupport() {
             if (!('Notification' in window)) {
-                alert('This browser does not support desktop notifications.');
+                permissionStatus.textContent = '❌ Notifications not supported in this browser';
+                requestPermissionBtn.disabled = true;
                 return;
             }
 
-            Notification.requestPermission().then(permission => {
-                if (permission === 'granted') {
-                    console.log('Notification permission granted.');
-                    showNotificationBtn.disabled = false; // Enable the show notification button
-                } else if (permission === 'denied') {
-                    console.warn('Notification permission denied.');
-                } else {
-                    console.log('Notification permission default (not granted yet).');
-                }
-            });
-        }
-
-        // Function to show a notification
-        function showSimpleNotification() {
-            if (Notification.permission === 'granted') {
-                const notification = new Notification('Hello from your website!', {
-                    body: 'This is a simple native notification.',
-                    icon: 'https://developer.mozilla.org/static/img/favicon144.png' // Optional icon
-                });
-
-                // Optional: Add event listeners for notification interactions
-                notification.onclick = () => {
-                    console.log('Notification clicked!');
-                    window.focus(); // Bring the browser tab to the foreground
-                };
-            } else {
-                alert('Please grant notification permission first.');
+            switch (Notification.permission) {
+                case 'granted':
+                    permissionStatus.textContent = '✅ Notifications enabled - Ready to test!';
+                    requestPermissionBtn.style.display = 'none';
+                    enableNotificationButtons();
+                    showFeatureSupport();
+                    break;
+                case 'denied':
+                    permissionStatus.textContent = '❌ Notifications blocked - Enable in browser settings';
+                    requestPermissionBtn.disabled = true;
+                    break;
+                default:
+                    permissionStatus.textContent = '⚠️ Click to enable notifications';
+                    requestPermissionBtn.disabled = false;
+                    break;
             }
         }
 
-        // Event listeners for the buttons
-        requestPermissionBtn.addEventListener('click', requestNotificationPermission);
-        showNotificationBtn.addEventListener('click', showSimpleNotification);
+        // Request notification permission
+        async function requestNotificationPermission() {
+            if (!('Notification' in window)) {
+                alert('This browser does not support notifications.');
+                return;
+            }
 
-        // Check initial permission status on page load
-        if (Notification.permission === 'granted') {
-            showNotificationBtn.disabled = false;
+            try {
+                const permission = await Notification.requestPermission();
+                console.log('Permission result:', permission);
+                
+                if (permission === 'granted') {
+                    // Show a success notification
+                    showBasicNotification();
+                }
+                
+                checkNotificationSupport();
+            } catch (error) {
+                console.error('Error requesting permission:', error);
+                alert('Error requesting notification permission');
+            }
         }
+
+        // Enable notification buttons
+        function enableNotificationButtons() {
+            const buttons = document.querySelectorAll('.button-group button');
+            buttons.forEach(btn => btn.disabled = false);
+        }
+
+        // Show feature support info
+        function showFeatureSupport() {
+            const features = ['actions', 'badge', 'icon', 'image', 'vibrate', 'tag', 'timestamp'];
+            let supported = [];
+            let unsupported = [];
+
+            features.forEach(feature => {
+                if (feature in Notification.prototype) {
+                    supported.push(feature);
+                } else {
+                    unsupported.push(feature);
+                }
+            });
+
+            featureInfo.innerHTML = `
+                <strong>Browser Support:</strong><br>
+                ✅ Supported: ${supported.join(', ')}<br>
+                ${unsupported.length > 0 ? `❌ Not supported: ${unsupported.join(', ')}` : ''}
+            `;
+        }
+
+        // Simple notification example (Web Push Book style)
+        function showBasicNotification() {
+            if (Notification.permission !== 'granted') {
+                alert('Please enable notifications first!');
+                return;
+            }
+
+            const title = 'Simple Title';
+            const options = {
+                body: 'Simple piece of body text.\nSecond line of body text 👍',
+                icon: 'data:image/svg+xml;base64,' + btoa(`
+                    <svg xmlns="http://www.w3.org/2000/svg" width="192" height="192" viewBox="0 0 24 24" fill="none">
+                        <rect width="24" height="24" fill="#2196F3" rx="4"/>
+                        <path d="m9 12 2 2 4-4" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                `),
+                tag: 'basic-example',
+                timestamp: Date.now()
+            };
+
+            const notification = new Notification(title, options);
+
+            // Handle notification click
+            notification.onclick = () => {
+                console.log('Basic notification clicked!');
+                window.focus();
+                notification.close();
+            };
+
+            console.log('Basic notification shown:', title);
+        }
+
+        // Event listeners
+        requestPermissionBtn.addEventListener('click', requestNotificationPermission);
+        basicNotificationBtn.addEventListener('click', showBasicNotification);
+
+        // Initialize on page load
+        window.addEventListener('load', checkNotificationSupport);
     </script>
 </body>
 </html>
