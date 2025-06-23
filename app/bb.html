@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Native Notification Example</title>
+</head>
+<body>
+    <h1>Native Browser Notifications</h1>
+    <button id="requestPermissionBtn">Request Notification Permission</button>
+    <button id="showNotificationBtn" disabled>Show Notification</button>
+
+    <script>
+        const requestPermissionBtn = document.getElementById('requestPermissionBtn');
+        const showNotificationBtn = document.getElementById('showNotificationBtn');
+
+        // Function to request notification permission
+        function requestNotificationPermission() {
+            if (!('Notification' in window)) {
+                alert('This browser does not support desktop notifications.');
+                return;
+            }
+
+            Notification.requestPermission().then(permission => {
+                if (permission === 'granted') {
+                    console.log('Notification permission granted.');
+                    showNotificationBtn.disabled = false; // Enable the show notification button
+                } else if (permission === 'denied') {
+                    console.warn('Notification permission denied.');
+                } else {
+                    console.log('Notification permission default (not granted yet).');
+                }
+            });
+        }
+
+        // Function to show a notification
+        function showSimpleNotification() {
+            if (Notification.permission === 'granted') {
+                const notification = new Notification('Hello from your website!', {
+                    body: 'This is a simple native notification.',
+                    icon: 'https://developer.mozilla.org/static/img/favicon144.png' // Optional icon
+                });
+
+                // Optional: Add event listeners for notification interactions
+                notification.onclick = () => {
+                    console.log('Notification clicked!');
+                    window.focus(); // Bring the browser tab to the foreground
+                };
+            } else {
+                alert('Please grant notification permission first.');
+            }
+        }
+
+        // Event listeners for the buttons
+        requestPermissionBtn.addEventListener('click', requestNotificationPermission);
+        showNotificationBtn.addEventListener('click', showSimpleNotification);
+
+        // Check initial permission status on page load
+        if (Notification.permission === 'granted') {
+            showNotificationBtn.disabled = false;
+        }
+    </script>
+</body>
+</html>
