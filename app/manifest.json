@@ -1,6 +1,6 @@
 {
-  "name": "Notification Demo PWA",
-  "short_name": "NotifyDemo",
+  "name": "Yes Tasks",
+  "short_name": "YesTasks",
   "description": "A simple PWA demonstrating browser notifications with Web Push Book best practices",
   "start_url": "./bb.html",
   "display": "standalone",
