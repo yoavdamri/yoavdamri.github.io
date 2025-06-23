@@ -1,0 +1,55 @@
+{
+  "name": "Yes Tasks",
+  "short_name": "YesTasks",
+  "description": "A simple PWA demonstrating browser notifications with Web Push Book best practices",
+  "start_url": "./yes.html",
+  "display": "standalone",
+  "background_color": "#f8f9fa",
+  "theme_color": "#4CAF50",
+  "orientation": "portrait-primary",
+  "categories": ["productivity", "utilities"],
+  "lang": "en",
+  "dir": "ltr",  "icons": [
+    {
+      "src": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI3MiIgaGVpZ2h0PSI3MiIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIj4KICA8cmVjdCB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIGZpbGw9IiM0Q0FGNTASISJ4PSI0Ii8+CiAgPHJlY3QgeD0iNCIgeT0iNiIgd2lkdGg9IjE2IiBoZWlnaHQ9IjEyIiBmaWxsPSJ3aGl0ZSIgcng9IjIiLz4KICA8cGF0aCBkPSJNNyA5aDEwTTcgMTJoMTBNNyAxNWg4IiBzdHJva2U9IiM0Q0FGNTAISJ0gcm9rZS13aWR0aD0iMS41IiBzdHJva2UtbGluZWNhcD0icm91bmQiLz4KICA8Y2lyY2xlIGN4PSI5IiBjeT0iOSIgcj0iMS41IiBmaWxsPSIjNENBRjUwIi8+CiAgPGNpcmNsZSBjeD0iOSIgY3k9IjEyIiByPSIxLjUiIGZpbGw9IiM0Q0FGNTAISJ8+CiAgPGNpcmNsZSBjeD0iOSIgY3k9IjE1IiByPSIxLjUiIGZpbGw9IiM0Q0FGNTAISJ8+Cjwvc3ZnPg==",
+      "sizes": "72x72",
+      "type": "image/svg+xml",
+      "purpose": "badge"
+    },
+    {
+      "src": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxOTIiIGhlaWdodD0iMTkyIiB2aWV3Qm94PSIwIDAgMjQgMjQiIGZpbGw9Im5vbmUiPgogIDxyZWN0IHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgZmlsbD0iIzRDQUY1MCIgcng9IjQiLz4KICA8cmVjdCB4PSI0IiB5PSI2IiB3aWR0aD0iMTYiIGhlaWdodD0iMTIiIGZpbGw9IndoaXRlIiByeD0iMiIvPgogIDxwYXRoIGQ9Ik03IDloMTBNNyAxMmgxME03IDE1aDgiIHN0cm9rZT0iIzRDQUY1MCIgc3Ryb2tlLXdpZHRoPSIxLjUiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPgogIDxjaXJjbGUgY3g9IjkiIGN5PSI5IiByPSIxLjUiIGZpbGw9IiM0Q0FGNTAISJ8+CiAgPGNpcmNsZSBjeD0iOSIgY3k9IjEyIiByPSIxLjUiIGZpbGw9IiM0Q0FGNTAISJ8+CiAgPGNpcmNsZSBjeD0iOSIgY3k9IjE1IiByPSIxLjUiIGZpbGw9IiM0Q0FGNTASISJ8+Cjwvc3ZnPg==",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI1MTIiIGhlaWdodD0iNTEyIiB2aWV3Qm94PSIwIDAgMjQgMjQiIGZpbGw9Im5vbmUiPgogIDxyZWN0IHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgZmlsbD0iIzRDQUY1MCIgcng9IjQiLz4KICA8cmVjdCB4PSI0IiB5PSI2IiB3aWR0aD0iMTYiIGhlaWdodD0iMTIiIGZpbGw9IndoaXRlIiByeD0iMiIvPgogIDxwYXRoIGQ9Ik03IDloMTBNNyAxMmgxME03IDE1aDgiIHN0cm9rZT0iIzRDQUY1MCIgc3Ryb2tlLXdpZHRoPSIxLjUiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPgogIDxjaXJjbGUgY3g9IjkiIGN5PSI5IiByPSIxLjUiIGZpbGw9IiM0Q0FGNTASISJ8+CiAgPGNpcmNsZSBjeD0iOSIgY3k9IjEyIiByPSIxLjUiIGZpbGw9IiM0Q0FGNTASISJ8+CiAgPGNpcmNsZSBjeD0iOSIgY3k9IjE1IiByPSIxLjUiIGZpbGw9IiM0Q0FGNTASISJ8+Cjwvc3ZnPg==",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIzMjAiIGhlaWdodD0iNjQwIiB2aWV3Qm94PSIwIDAgMzIwIDY0MCI+CiAgPHJlY3Qgd2lkdGg9IjMyMCIgaGVpZ2h0PSI2NDAiIGZpbGw9IiNmOGY5ZmEiLz4KICA8cmVjdCB4PSI0MCIgeT0iMTUwIiB3aWR0aD0iMjQwIiBoZWlnaHQ9IjM0MCIgZmlsbD0id2hpdGUiIHJ4PSIxMiIvPgogIDx0ZXh0IHg9IjE2MCIgeT0iMjAwIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmb250LXNpemU9IjI0IiBmaWxsPSIjMzMzIj7wn5SONDE8L3RleHQ+CiAgPHRleHQgeD0iMTYwIiB5PSIyNDAiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZvbnQtc2l6ZT0iMTYiIGZpbGw9IiM2NjYiPk5vdGlmaWNhdGlvbiBEZW1vPC90ZXh0PgogIDxyZWN0IHg9IjEwMCIgeT0iMjgwIiB3aWR0aD0iMTIwIiBoZWlnaHQ9IjUwIiBmaWxsPSIjMjE5NkYzIiByeD0iOCIvPgogIDx0ZXh0IHg9IjE2MCIgeT0iMzEwIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmb250LXNpemU9IjE0IiBmaWxsPSJ3aGl0ZSI+U2hvdyBOb3RpZmljYXRpb248L3RleHQ+Cjwvc3ZnPg==",
+      "sizes": "320x640",
+      "type": "image/svg+xml",
+      "form_factor": "narrow",
+      "label": "Notification Demo Mobile View"
+    }
+  ],  "shortcuts": [
+    {
+      "name": "Create Task",
+      "short_name": "Add Task",
+      "description": "Create a new task or reminder",
+      "url": "./yes.html?action=create",
+      "icons": [
+        {
+          "src": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI5NiIgaGVpZ2h0PSI5NiIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIj4KICA8cmVjdCB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIGZpbGw9IiM0Q0FGNTASISJ4PSI0Ii8+CiAgPHBhdGggZD0iTTEyIDZWMThNNiAxMmgxMiIgc3Ryb2tlPSJ3aGl0ZSIgc3Ryb2tlLXdpZHRoPSIzIiBzdHJva2UtbGluZWNhcD0icm91bmQiLz4KICA8Y2lyY2xlIGN4PSIxMiIgY3k9IjEyIiByPSIxMCIgc3Ryb2tlPSJ3aGl0ZSIgc3Ryb2tlLXdpZHRoPSIyIiBmaWxsPSJub25lIi8+Cjwvc3ZnPg==",
+          "sizes": "96x96",
+          "type": "image/svg+xml"
+        }
+      ]
+    }
+  ]
+}
