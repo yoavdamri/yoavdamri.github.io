@@ -1,0 +1,57 @@
+{
+  "name": "Notification Demo PWA",
+  "short_name": "NotifyDemo",
+  "description": "A simple PWA demonstrating browser notifications with Web Push Book best practices",
+  "start_url": "./bb.html",
+  "display": "standalone",
+  "background_color": "#f8f9fa",
+  "theme_color": "#2196F3",
+  "orientation": "portrait-primary",
+  "categories": ["productivity", "utilities"],
+  "lang": "en",
+  "dir": "ltr",
+  "icons": [
+    {
+      "src": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI3MiIgaGVpZ2h0PSI3MiIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIj4KICA8cmVjdCB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIGZpbGw9IiMyMTk2RjMiIHJ4PSI0Ii8+CiAgPHBhdGggZD0ibTkgMTIgMiAyIDQtNCIgc3Ryb2tlPSJ3aGl0ZSIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz4KICA8cGF0aCBkPSJNNiA5VjZhMyAzIDAgMCAxIDMtM2g2YTMgMyAwIDAgMSAzIDN2M2ExIDEgMCAwIDEtMSAxaC00YTEgMSAwIDAgMS0xLTFaIiBmaWxsPSJ3aGl0ZSIgZmlsbC1vcGFjaXR5PSIuNyIvPgogIDxwYXRoIGQ9Ik0xMSAyMGgySDE1djJIOWEzIDMgMCAwIDEtMy0zdi0yaDNWMjBaIiBmaWxsPSJ3aGl0ZSIgZmlsbC1vcGFjaXR5PSIuNSIvPgo8L3N2Zz4K",
+      "sizes": "72x72",
+      "type": "image/svg+xml",
+      "purpose": "badge"
+    },
+    {
+      "src": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxOTIiIGhlaWdodD0iMTkyIiB2aWV3Qm94PSIwIDAgMjQgMjQiIGZpbGw9Im5vbmUiPgogIDxyZWN0IHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgZmlsbD0iIzIxOTZGMyIgcng9IjQiLz4KICA8cGF0aCBkPSJtOSAxMiAyIDIgNC00IiBzdHJva2U9IndoaXRlIiBzdHJva2Utd2lkdGg9IjIiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPgogIDxwYXRoIGQ9Ik02IDlWNmEzIDMgMCAwIDEgMy0zaDZhMyAzIDAgMCAxIDMgM3YzYTEgMSAwIDAgMS0xIDFoLTRhMSAxIDAgMCAxLTEtMVoiIGZpbGw9IndoaXRlIiBmaWxsLW9wYWNpdHk9Ii43Ii8+CiAgPHBhdGggZD0iTTExIDIwaEg4SDV2MmgtMmEzIDMgMCAwIDEtMy0zdi0yaDNWMjBaIiBmaWxsPSJ3aGl0ZSIgZmlsbC1vcGFjaXR5PSIuNSIvPgo8L3N2Zz4K",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI1MTIiIGhlaWdodD0iNTEyIiB2aWV3Qm94PSIwIDAgMjQgMjQiIGZpbGw9Im5vbmUiPgogIDxyZWN0IHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgZmlsbD0iIzIxOTZGMyIgcng9IjQiLz4KICA8cGF0aCBkPSJtOSAxMiAyIDIgNC00IiBzdHJva2U9IndoaXRlIiBzdHJva2Utd2lkdGg9IjIiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPgogIDxwYXRoIGQ9Ik02IDlWNmEzIDMgMCAwIDEgMy0zaDZhMyAzIDAgMCAxIDMgM3YzYTEgMSAwIDAgMS0xIDFoLTRhMSAxIDAgMCAxLTEtMVoiIGZpbGw9IndoaXRlIiBmaWxsLW9wYWNpdHk9Ii43Ii8+CiAgPHBhdGggZD0iTTExIDIwaEg4SDV2MmgtMmEzIDMgMCAwIDEtMy0zdi0yaDNWMjBaIiBmaWxsPSJ3aGl0ZSIgZmlsbC1vcGFjaXR5PSIuNSIvPgo8L3N2Zz4K",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIzMjAiIGhlaWdodD0iNjQwIiB2aWV3Qm94PSIwIDAgMzIwIDY0MCI+CiAgPHJlY3Qgd2lkdGg9IjMyMCIgaGVpZ2h0PSI2NDAiIGZpbGw9IiNmOGY5ZmEiLz4KICA8cmVjdCB4PSI0MCIgeT0iMTUwIiB3aWR0aD0iMjQwIiBoZWlnaHQ9IjM0MCIgZmlsbD0id2hpdGUiIHJ4PSIxMiIvPgogIDx0ZXh0IHg9IjE2MCIgeT0iMjAwIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmb250LXNpemU9IjI0IiBmaWxsPSIjMzMzIj7wn5SONDE8L3RleHQ+CiAgPHRleHQgeD0iMTYwIiB5PSIyNDAiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZvbnQtc2l6ZT0iMTYiIGZpbGw9IiM2NjYiPk5vdGlmaWNhdGlvbiBEZW1vPC90ZXh0PgogIDxyZWN0IHg9IjEwMCIgeT0iMjgwIiB3aWR0aD0iMTIwIiBoZWlnaHQ9IjUwIiBmaWxsPSIjMjE5NkYzIiByeD0iOCIvPgogIDx0ZXh0IHg9IjE2MCIgeT0iMzEwIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmb250LXNpemU9IjE0IiBmaWxsPSJ3aGl0ZSI+U2hvdyBOb3RpZmljYXRpb248L3RleHQ+Cjwvc3ZnPg==",
+      "sizes": "320x640",
+      "type": "image/svg+xml",
+      "form_factor": "narrow",
+      "label": "Notification Demo Mobile View"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Show Notification",
+      "short_name": "Notify",
+      "description": "Trigger a test notification",
+      "url": "./bb.html?action=notify",
+      "icons": [
+        {
+          "src": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI5NiIgaGVpZ2h0PSI5NiIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIj4KICA8cGF0aCBkPSJNNiA4QTYgNiAwIDEgMSAxOCA4YzAgNy0zIDktMyA5SDl2LTEuNUEyLjUgMi41IDAgMCAxIDExLjUgMTMiIHN0cm9rZT0iIzIxOTZGMyIgc3Ryb2tlLXdpZHRoPSIyIiBmaWxsPSJub25lIi8+CiAgPHBhdGggZD0iTTEzLjczIDIxYTIgMiAwIDAgMS0zLjQ2IDAiIHN0cm9rZT0iIzIxOTZGMyIgc3Ryb2tlLXdpZHRoPSIyIiBmaWxsPSJub25lIi8+Cjwvc3ZnPg==",
+          "sizes": "96x96",
+          "type": "image/svg+xml"
+        }
+      ]
+    }
+  ]
+}
