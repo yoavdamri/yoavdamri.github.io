@@ -1,8 +1,8 @@
-// Service Worker for Notification PWA
-const CACHE_NAME = 'notification-pwa-v1';
+// Service Worker for Tasks PWA
+const CACHE_NAME = 'tasks-pwa-v1';
 const urlsToCache = [
     './',
-    './bb.html',
+    './yes.html',
     './manifest.json'
 ];
 
@@ -61,13 +61,11 @@ self.addEventListener('notificationclick', (event) => {
     const action = event.action;
 
     // Close the notification
-    notification.close();
-
-    // Handle different actions
+    notification.close();    // Handle different actions
     if (action === 'open') {
         // Open the app
         event.waitUntil(
-            clients.openWindow('./bb.html')
+            clients.openWindow('./yes.html')
         );
     } else if (action === 'close') {
         // Just close (already done above)
@@ -80,13 +78,13 @@ self.addEventListener('notificationclick', (event) => {
                     // Try to focus an existing window
                     for (let i = 0; i < clientList.length; i++) {
                         const client = clientList[i];
-                        if (client.url.includes('bb.html') && 'focus' in client) {
+                        if (client.url.includes('yes.html') && 'focus' in client) {
                             return client.focus();
                         }
                     }
                     // If no window found, open a new one
                     if (clients.openWindow) {
-                        return clients.openWindow('./bb.html');
+                        return clients.openWindow('./yes.html');
                     }
                 })
         );

@@ -280,6 +280,7 @@
         }
 
         async function show30sNotification() {
+            await showNotification();
             setTimeout(show30sNotification, 30000);
         }
 
