@@ -1,5 +1,5 @@
 // Service Worker for Tasks PWA
-const CACHE_NAME = 'tasks-pwa-v1';
+const CACHE_NAME = 'tasks-pwa-v2-' + Date.now(); // Force cache update with timestamp
 const urlsToCache = [
     './',
     './yes.html',
@@ -42,13 +42,39 @@ self.addEventListener('activate', (event) => {
     );
 });
 
-// Fetch event - serve cached content when offline
+// Fetch event - serve cached content with network-first for HTML files
 self.addEventListener('fetch', (event) => {
     event.respondWith(
-        caches.match(event.request)
+        // Network-first strategy for HTML files to get updates quickly
+        fetch(event.request)
             .then((response) => {
-                // Return cached version or fetch from network
-                return response || fetch(event.request);
+                // If we got a response from the network, cache it and return it
+                if (response && response.status === 200) {
+                    const responseToCache = response.clone();
+                    caches.open(CACHE_NAME)
+                        .then((cache) => {
+                            cache.put(event.request, responseToCache);
+                        });
+                    return response;
+                }
+                // If network fails, fall back to cache
+                return caches.match(event.request);
+            })
+            .catch(() => {
+                // Network failed, try cache
+                return caches.match(event.request)
+                    .then((cachedResponse) => {
+                        if (cachedResponse) {
+                            return cachedResponse;
+                        }
+                        // If no cache, return a basic offline page response
+                        if (event.request.destination === 'document') {
+                            return new Response(
+                                '<!DOCTYPE html><html><head><title>Offline</title></head><body><h1>You are offline</h1><p>Please check your internet connection.</p></body></html>',
+                                { headers: { 'Content-Type': 'text/html' } }
+                            );
+                        }
+                    });
             })
     );
 });
