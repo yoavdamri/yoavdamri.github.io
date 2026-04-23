@@ -52,7 +52,7 @@
 
             document.getElementById('push-btn').onclick = async () => {
                 document.getElementById('status').innerText = "Request sent! Wait 10s...";
-                
+
                 // Send subscription to your backend
                 await fetch('https://your-backend.com/notify', {
                     method: 'POST',

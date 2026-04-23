@@ -1,6 +1,6 @@
-self.addEventListener('push', function(event) {
+self.addEventListener('push', function (event) {
     const data = event.data ? event.data.text() : 'Default notification message';
-    
+
     const options = {
         body: data,
         icon: 'icon-192.png',
