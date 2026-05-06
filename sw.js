@@ -67,7 +67,7 @@ self.addEventListener('notificationclick', (event) => {
         setTimeout(async () => {
           try {
             // Fetch latest consumption
-            const resp = await fetch('https://69faf1fc4f09202981524a35.base44.app/functions/solarProxy');
+            const resp = await fetch('https://monitoringapi.solaredge.com/site/1892524/powerDetails?meters=CONSUMPTION&startTime=2025-05-23%2002%3A00%3A00&endTime=2025-05-23%2023%3A00%3A00&api_key=LN4T1U86HLWSV31ICAFO20P8A6H03MTT');
             const json = await resp.json();
             const values = json?.powerDetails?.meters?.[0]?.values || [];
             const nonNull = values.filter(v => v.value != null);
