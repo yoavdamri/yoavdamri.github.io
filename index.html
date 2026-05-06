@@ -195,6 +195,18 @@
       </button>
     </div>
 
+    <!-- Current Time Display -->
+    <div id="currentTimeCard" class="glass rounded-2xl p-4 mb-4">
+      <div class="flex items-center gap-2 mb-2">
+        <i data-lucide="calendar" class="w-4 h-4 text-slate-400"></i>
+        <span class="text-xs font-medium text-slate-400 uppercase tracking-wider">Current Time</span>
+      </div>
+      <div class="text-center">
+        <p id="currentDateTime" class="text-sm font-semibold text-white">—</p>
+        <p id="israelTimeZone" class="text-xs text-slate-500 mt-1">Israel Time (IDT)</p>
+      </div>
+    </div>
+
     <!-- Schedule Info -->
     <div class="glass rounded-2xl p-4">
       <div class="flex items-center gap-2 mb-3">
@@ -566,6 +578,23 @@
       }, delay);
     }
 
+    function updateCurrentTimeDisplay() {
+      const now = new Date();
+      const israelTime = new Date(now.getTime() + 3 * 60 * 60 * 1000);
+      
+      const year = israelTime.getUTCFullYear();
+      const month = String(israelTime.getUTCMonth() + 1).padStart(2, '0');
+      const date = String(israelTime.getUTCDate()).padStart(2, '0');
+      const hours = String(israelTime.getUTCHours()).padStart(2, '0');
+      const mins = String(israelTime.getUTCMinutes()).padStart(2, '0');
+      const secs = String(israelTime.getUTCSeconds()).padStart(2, '0');
+      
+      const dateStr = `${year}-${month}-${date}`;
+      const timeStr = `${hours}:${mins}:${secs}`;
+      
+      document.getElementById('currentDateTime').textContent = `${dateStr} · ${timeStr}`;
+    }
+
     function updateNextCheckDisplay() {
       const now = new Date();
       const israelTime = new Date(now.getTime() + 3 * 60 * 60 * 1000);
@@ -577,7 +606,8 @@
       const diffMs = next.getTime() - israelTime.getTime();
       const diffH = Math.floor(diffMs / 3600000);
       const diffM = Math.floor((diffMs % 3600000) / 60000);
-      document.getElementById('nextCheckTime').textContent = `Next check: in ${diffH}h ${diffM}m`;
+      const diffS = Math.floor((diffMs % 60000) / 1000);
+      document.getElementById('nextCheckTime').textContent = `Next check: in ${diffH}h ${diffM}m ${diffS}s`;
     }
 
     // ─── Toast ────────────────────────────────────────────────────────────
@@ -604,7 +634,9 @@
 
     // ─── Auto-refresh every 5 min ─────────────────────────────────────────
     setInterval(fetchConsumption, 5 * 60 * 1000);
-    setInterval(updateNextCheckDisplay, 60 * 1000);
+    setInterval(updateNextCheckDisplay, 1000); // Update every second for accuracy
+    setInterval(updateCurrentTimeDisplay, 1000); // Update current time every second
+    updateCurrentTimeDisplay(); // Initialize immediately
   </script>
 </body>
 </html>
