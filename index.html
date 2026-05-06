@@ -195,6 +195,18 @@
       </button>
     </div>
 
+    <!-- Current Time Display -->
+    <div id="currentTimeCard" class="glass rounded-2xl p-4 mb-4">
+      <div class="flex items-center gap-2 mb-2">
+        <i data-lucide="calendar" class="w-4 h-4 text-slate-400"></i>
+        <span class="text-xs font-medium text-slate-400 uppercase tracking-wider">Current Time</span>
+      </div>
+      <div class="text-center">
+        <p id="currentDateTime" class="text-sm font-semibold text-white">—</p>
+        <p id="israelTimeZone" class="text-xs text-slate-500 mt-1">Israel Time (IDT)</p>
+      </div>
+    </div>
+
     <!-- Schedule Info -->
     <div class="glass rounded-2xl p-4">
       <div class="flex items-center gap-2 mb-3">
@@ -267,6 +279,27 @@
       }
     }
 
+    // ─── Get Last 3 Hours Time Range ────────────────────────────────────
+    function getLast3HoursTimeRange() {
+      const now = new Date();
+      const threeHoursAgo = new Date(now.getTime() - 3 * 60 * 60 * 1000);
+      
+      const formatTime = (date) => {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        const hours = String(date.getHours()).padStart(2, '0');
+        const mins = String(date.getMinutes()).padStart(2, '0');
+        const secs = String(date.getSeconds()).padStart(2, '0');
+        return `${year}-${month}-${day} ${hours}:${mins}:${secs}`;
+      };
+      
+      return {
+        startTime: formatTime(threeHoursAgo),
+        endTime: formatTime(now)
+      };
+    }
+
     // ─── Fetch Consumption ───────────────────────────────────────────────
     async function fetchConsumption() {
       const btn = document.getElementById('refreshBtn');
@@ -275,7 +308,11 @@
       btn.disabled = true;
 
       try {
-        const resp = await fetch('https://monitoringapi.solaredge.com/site/1892524/powerDetails?meters=CONSUMPTION&startTime=2025-05-23%2002%3A00%3A00&endTime=2025-05-23%2023%3A00%3A00&api_key=LN4T1U86HLWSV31ICAFO20P8A6H03MTT', { method: 'GET' });
+        const { startTime, endTime } = getLast3HoursTimeRange();
+        const startTimeEnc = encodeURIComponent(startTime);
+        const endTimeEnc = encodeURIComponent(endTime);
+        const url = `https://monitoringapi.solaredge.com/site/1892524/powerDetails?meters=CONSUMPTION&startTime=${startTimeEnc}&endTime=${endTimeEnc}&api_key=LN4T1U86HLWSV31ICAFO20P8A6H03MTT`;
+        const resp = await fetch(url, { method: 'GET' });
         if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
         const json = await resp.json();
 
@@ -541,6 +578,23 @@
       }, delay);
     }
 
+    function updateCurrentTimeDisplay() {
+      const now = new Date();
+      const israelTime = new Date(now.getTime() + 3 * 60 * 60 * 1000);
+      
+      const year = israelTime.getUTCFullYear();
+      const month = String(israelTime.getUTCMonth() + 1).padStart(2, '0');
+      const date = String(israelTime.getUTCDate()).padStart(2, '0');
+      const hours = String(israelTime.getUTCHours()).padStart(2, '0');
+      const mins = String(israelTime.getUTCMinutes()).padStart(2, '0');
+      const secs = String(israelTime.getUTCSeconds()).padStart(2, '0');
+      
+      const dateStr = `${year}-${month}-${date}`;
+      const timeStr = `${hours}:${mins}:${secs}`;
+      
+      document.getElementById('currentDateTime').textContent = `${dateStr} · ${timeStr}`;
+    }
+
     function updateNextCheckDisplay() {
       const now = new Date();
       const israelTime = new Date(now.getTime() + 3 * 60 * 60 * 1000);
@@ -552,7 +606,8 @@
       const diffMs = next.getTime() - israelTime.getTime();
       const diffH = Math.floor(diffMs / 3600000);
       const diffM = Math.floor((diffMs % 3600000) / 60000);
-      document.getElementById('nextCheckTime').textContent = `Next check: in ${diffH}h ${diffM}m`;
+      const diffS = Math.floor((diffMs % 60000) / 1000);
+      document.getElementById('nextCheckTime').textContent = `Next check: in ${diffH}h ${diffM}m ${diffS}s`;
     }
 
     // ─── Toast ────────────────────────────────────────────────────────────
@@ -579,7 +634,9 @@
 
     // ─── Auto-refresh every 5 min ─────────────────────────────────────────
     setInterval(fetchConsumption, 5 * 60 * 1000);
-    setInterval(updateNextCheckDisplay, 60 * 1000);
+    setInterval(updateNextCheckDisplay, 1000); // Update every second for accuracy
+    setInterval(updateCurrentTimeDisplay, 1000); // Update current time every second
+    updateCurrentTimeDisplay(); // Initialize immediately
   </script>
 </body>
 </html>
