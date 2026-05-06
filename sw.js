@@ -67,7 +67,23 @@ self.addEventListener('notificationclick', (event) => {
         setTimeout(async () => {
           try {
             // Fetch latest consumption
-            const resp = await fetch('https://monitoringapi.solaredge.com/site/1892524/powerDetails?meters=CONSUMPTION&startTime=2025-05-23%2002%3A00%3A00&endTime=2025-05-23%2023%3A00%3A00&api_key=LN4T1U86HLWSV31ICAFO20P8A6H03MTT');
+            const now = new Date();
+            const threeHoursAgo = new Date(now.getTime() - 3 * 60 * 60 * 1000);
+            const formatTime = (date) => {
+              const year = date.getFullYear();
+              const month = String(date.getMonth() + 1).padStart(2, '0');
+              const day = String(date.getDate()).padStart(2, '0');
+              const hours = String(date.getHours()).padStart(2, '0');
+              const mins = String(date.getMinutes()).padStart(2, '0');
+              const secs = String(date.getSeconds()).padStart(2, '0');
+              return `${year}-${month}-${day} ${hours}:${mins}:${secs}`;
+            };
+            const startTime = formatTime(threeHoursAgo);
+            const endTime = formatTime(now);
+            const startTimeEnc = encodeURIComponent(startTime);
+            const endTimeEnc = encodeURIComponent(endTime);
+            const url = `https://monitoringapi.solaredge.com/site/1892524/powerDetails?meters=CONSUMPTION&startTime=${startTimeEnc}&endTime=${endTimeEnc}&api_key=LN4T1U86HLWSV31ICAFO20P8A6H03MTT`;
+            const resp = await fetch(url);
             const json = await resp.json();
             const values = json?.powerDetails?.meters?.[0]?.values || [];
             const nonNull = values.filter(v => v.value != null);
