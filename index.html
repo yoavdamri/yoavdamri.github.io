@@ -162,7 +162,7 @@
         <i data-lucide="bell-off" class="w-5 h-5 text-amber-400 flex-shrink-0 mt-0.5"></i>
         <div class="flex-1">
           <p class="text-sm font-medium text-white">Enable Notifications</p>
-          <p class="text-xs text-slate-400 mt-0.5">Get alerts when your car starts or stops charging at 22:15 daily.</p>
+          <p class="text-xs text-slate-400 mt-0.5">Get alerts when your car starts or stops charging at 22:30 daily.</p>
         </div>
         <button onclick="requestNotificationPermission()" class="text-xs bg-amber-500 hover:bg-amber-400 text-slate-900 font-bold px-3 py-1.5 rounded-lg transition-colors flex-shrink-0">
           Enable
@@ -190,7 +190,7 @@
         </div>
         <div class="text-left">
           <div class="text-xs font-semibold text-white">Check Now</div>
-          <div class="text-xs text-slate-500">Run 22:15 logic</div>
+          <div class="text-xs text-slate-500">Run 22:30 logic</div>
         </div>
       </button>
     </div>
@@ -215,7 +215,7 @@
       </div>
       <div class="flex items-center justify-between">
         <div>
-          <p class="text-sm font-semibold text-white">22:15 — Nightly Check</p>
+          <p class="text-sm font-semibold text-white">22:30 — Nightly Check</p>
           <p class="text-xs text-slate-500">Israel Time (IDT) · Auto-notification</p>
         </div>
         <div id="scheduleStatus" class="flex items-center gap-1.5">
@@ -238,6 +238,7 @@
     let currentConsumptionKw = null;
     let scheduledCheckTimer = null;
     let testNotifTimer = null;
+    let daytimeAlertSent = false;
 
     // ─── Init ────────────────────────────────────────────────────────────
     window.addEventListener('load', async () => {
@@ -347,6 +348,9 @@
         // Car card
         updateCarCard(currentConsumptionKw);
 
+        // Daytime notification threshold
+        checkDaytimeNotification(currentConsumptionKw);
+
       } catch (e) {
         console.error(e);
         showToast('Failed to fetch data: ' + e.message, 'alert-triangle', 'text-red-400');
@@ -429,6 +433,28 @@
       lucide.createIcons();
     }
 
+    function checkDaytimeNotification(kw) {
+      const now = new Date();
+      const israelTime = new Date(now.getTime() + 3 * 60 * 60 * 1000);
+      const hour = israelTime.getUTCHours();
+
+      if (hour >= 7 && hour < 22) {
+        if (kw > 5 && !daytimeAlertSent) {
+          sendNotification(
+            '⚠️ High Consumption Alert',
+            `Current consumption is ${kw.toFixed(2)}kW`,
+            [],
+            'solar-day-warning'
+          );
+          daytimeAlertSent = true;
+        } else if (kw <= 5) {
+          daytimeAlertSent = false;
+        }
+      } else {
+        daytimeAlertSent = false;
+      }
+    }
+
     function renderChart(values) {
       const chart = document.getElementById('chart');
       if (!chart) { 
@@ -492,7 +518,7 @@
       }, 10000);
     }
 
-    // ─── Check Now (run 22:15 logic immediately) ──────────────────────────
+    // ─── Check Now (run 22:30 logic immediately) ──────────────────────────
     async function checkNow() {
       await fetchConsumption();
       if (!currentConsumptionKw) return;
@@ -502,17 +528,17 @@
 
     // ─── Nightly Logic ────────────────────────────────────────────────────
     function runNightlyLogic(kw) {
-      if (kw > 9) {
+      if (kw > 10) {
         sendNotification(
-          `⚡ Consumption is ${kw.toFixed(2)}kW ✓`,
-          'Car is being charging',
+          `✅ Car is charging — ${kw.toFixed(2)}kW`,
+          'Car is charging',
           [],
           'solar-night-high'
         );
-      } else if (kw < 5) {
+      } else if (kw < 8) {
         sendNotification(
-          'ℹ️ Car Status Alert',
-          'Car is not charging',
+          '⚠️ Car is not charging',
+          `Current consumption: ${kw.toFixed(2)}kW`,
           [
             { action: 'snooze15', title: '⏰ Remind me in 15 mins' },
             { action: 'snooze60', title: '⏰ Remind me in 1 hour' }
@@ -521,8 +547,8 @@
         );
       } else {
         sendNotification(
-          '🔆 Moderate Consumption',
-          `Current: ${kw.toFixed(2)}kW — monitoring continues`,
+          'ℹ️ Current Consumption',
+          `Current consumption: ${kw.toFixed(2)}kW`,
           [],
           'solar-night-mid'
         );
@@ -552,7 +578,7 @@
       }
     }
 
-    // ─── Schedule Nightly Check (22:15 IST) ──────────────────────────────
+    // ─── Schedule Nightly Check (22:30 IST) ──────────────────────────────
     function scheduleNightlyCheck() {
       if (scheduledCheckTimer) clearTimeout(scheduledCheckTimer);
 
@@ -560,9 +586,9 @@
       // Israel time = UTC+3 (IDT in summer)
       const israelTime = new Date(now.getTime() + 3 * 60 * 60 * 1000);
       const next = new Date(israelTime);
-      next.setUTCHours(19, 15, 0, 0); // 22:15 IDT = 19:15 UTC
+      next.setUTCHours(19, 30, 0, 0); // 22:30 IDT = 19:30 UTC
 
-      if (israelTime.getUTCHours() > 19 || (israelTime.getUTCHours() === 19 && israelTime.getUTCMinutes() >= 15)) {
+      if (israelTime.getUTCHours() > 19 || (israelTime.getUTCHours() === 19 && israelTime.getUTCMinutes() >= 30)) {
         next.setUTCDate(next.getUTCDate() + 1);
       }
 
@@ -598,12 +624,18 @@
     function updateNextCheckDisplay() {
       const now = new Date();
       const israelTime = new Date(now.getTime() + 3 * 60 * 60 * 1000);
-      const next = new Date(israelTime);
-      next.setUTCHours(19, 15, 0, 0);
-      if (israelTime.getUTCHours() > 19 || (israelTime.getUTCHours() === 19 && israelTime.getUTCMinutes() >= 15)) {
+      
+      // Create next check time from the original 'now' to avoid date boundary issues
+      const next = new Date(now.getTime());
+      // Set to 22:30 Israel time = 19:30 UTC
+      next.setUTCHours(19, 30, 0, 0);
+      
+      // If the next scheduled time has already passed today, schedule for tomorrow
+      if (next.getTime() <= now.getTime()) {
         next.setUTCDate(next.getUTCDate() + 1);
       }
-      const diffMs = next.getTime() - israelTime.getTime();
+      
+      const diffMs = next.getTime() - now.getTime();
       const diffH = Math.floor(diffMs / 3600000);
       const diffM = Math.floor((diffMs % 3600000) / 60000);
       const diffS = Math.floor((diffMs % 60000) / 1000);
