@@ -107,7 +107,7 @@ self.addEventListener('notificationclick', (event) => {
                 { action: 'snooze60', title: 'Remind me in 1 hour' }
               ];
             } else {
-              title = '🔆 SolarEdge Monitor';
+              title = '🔆 SolarEdge Monitor v1.0';
               body = `Current consumption: ${kw}kW`;
               icon = '/icons/icon-192.png';
               actions = [];
@@ -141,6 +141,61 @@ self.addEventListener('notificationclick', (event) => {
         return clients.openWindow('/');
       })
     );
+  }
+});
+
+async function fetchHourlyConsumptionValues() {
+  const now = new Date();
+  const threeHoursAgo = new Date(now.getTime() - 3 * 60 * 60 * 1000);
+  const formatTime = (date) => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const hours = String(date.getHours()).padStart(2, '0');
+    const mins = String(date.getMinutes()).padStart(2, '0');
+    const secs = String(date.getSeconds()).padStart(2, '0');
+    return `${year}-${month}-${day} ${hours}:${mins}:${secs}`;
+  };
+
+  const startTime = formatTime(threeHoursAgo);
+  const endTime = formatTime(now);
+  const startTimeEnc = encodeURIComponent(startTime);
+  const endTimeEnc = encodeURIComponent(endTime);
+  const url = `https://monitoringapi.solaredge.com/site/1892524/powerDetails?meters=CONSUMPTION&startTime=${startTimeEnc}&endTime=${endTimeEnc}&api_key=LN4T1U86HLWSV31ICAFO20P8A6H03MTT`;
+  const resp = await fetch(url);
+  const json = await resp.json();
+  return json?.powerDetails?.meters?.[0]?.values || [];
+}
+
+async function performHourlyNotification() {
+  try {
+    const values = await fetchHourlyConsumptionValues();
+    const nonNull = values.filter(v => v.value != null);
+    const latest = nonNull.length ? nonNull[nonNull.length - 1].value : null;
+    const kw = latest != null ? (latest / 1000).toFixed(2) : 'N/A';
+    const title = latest != null ? `Hourly report — ${kw}kW` : 'Hourly SolarEdge report';
+    const body = latest != null ? `Latest consumption is ${kw}kW` : 'Unable to retrieve latest consumption data';
+
+    await self.registration.showNotification(title, {
+      body,
+      icon: '/icons/icon-192.png',
+      badge: '/icons/icon-192.png',
+      tag: 'solar-hourly',
+      data: { latestKw: latest != null ? latest / 1000 : null }
+    });
+  } catch (e) {
+    await self.registration.showNotification('SolarEdge hourly report', {
+      body: 'Hourly update failed',
+      icon: '/icons/icon-192.png',
+      badge: '/icons/icon-192.png',
+      tag: 'solar-hourly-failed'
+    });
+  }
+}
+
+self.addEventListener('periodicsync', (event) => {
+  if (event.tag === 'hourly-check') {
+    event.waitUntil(performHourlyNotification());
   }
 });
 

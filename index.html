@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>SolarEdge Monitor</title>
+  <title>SolarEdge Monitor v1.0</title>
 
   <!-- PWA -->
   <link rel="manifest" href="manifest.json" />
@@ -254,8 +254,11 @@
     // ─── Init ────────────────────────────────────────────────────────────
     window.addEventListener('load', async () => {
       lucide.createIcons();
-      await registerServiceWorker();
+      const registration = await registerServiceWorker();
       checkNotificationPermission();
+      if (registration && Notification.permission === 'granted') {
+        await registerHourlyBackgroundSync(registration);
+      }
       await fetchConsumption();
       scheduleNightlyCheck();
       updateNextCheckDisplay();
@@ -265,12 +268,66 @@
     async function registerServiceWorker() {
       if ('serviceWorker' in navigator) {
         try {
-          await navigator.serviceWorker.register('sw.js');
+          const registration = await navigator.serviceWorker.register('sw.js');
           console.log('[SW] Registered');
+          return registration;
         } catch (e) {
           console.warn('[SW] Failed:', e);
         }
       }
+      return null;
+    }
+
+    async function registerHourlyBackgroundSync(registration) {
+      if (!registration) return;
+
+      if ('periodicSync' in registration) {
+        try {
+          const tags = await registration.periodicSync.getTags();
+          if (!tags.includes('hourly-check')) {
+            await registration.periodicSync.register('hourly-check', {
+              minInterval: 60 * 60 * 1000
+            });
+            console.log('[SW] Registered periodic hourly sync');
+          }
+          showToast('Hourly background notifications enabled', 'check-circle', 'text-green-400');
+          return;
+        } catch (e) {
+          console.warn('[SW] Periodic sync registration failed:', e);
+        }
+      }
+
+      console.warn('[SW] Periodic background sync unavailable');
+      showToast('Hourly background notifications unsupported', 'alert-triangle', 'text-yellow-400');
+      scheduleHourlyNotificationFallback();
+    }
+
+    let hourlyFallbackTimer = null;
+    function scheduleHourlyNotificationFallback() {
+      if (hourlyFallbackTimer) {
+        clearTimeout(hourlyFallbackTimer);
+      }
+
+      const now = new Date();
+      const next = new Date(now);
+      next.setMinutes(0, 0, 0, 0);
+      next.setHours(next.getHours() + 1);
+
+      const delay = next.getTime() - now.getTime();
+      hourlyFallbackTimer = setTimeout(async () => {
+        if (Notification.permission === 'granted') {
+          await fetchConsumption();
+          if (currentConsumptionKw !== null) {
+            sendNotification(
+              '🔔 Hourly SolarEdge update',
+              `Latest consumption is ${currentConsumptionKw.toFixed(2)}kW`,
+              [],
+              'solar-hourly-fallback'
+            );
+          }
+        }
+        scheduleHourlyNotificationFallback();
+      }, delay);
     }
 
     // ─── Notification Permission ─────────────────────────────────────────
@@ -286,6 +343,11 @@
       if (perm === 'granted') {
         document.getElementById('notifBanner').classList.add('hidden');
         showToast('Notifications enabled! ✓', 'check-circle', 'text-green-400');
+
+        if ('serviceWorker' in navigator) {
+          const registration = await navigator.serviceWorker.ready;
+          await registerHourlyBackgroundSync(registration);
+        }
       } else {
         showToast('Notifications blocked. Please enable in browser settings.', 'alert-circle', 'text-red-400');
       }
