@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>SolarEdge Monitor v1.0</title>
+  <title>SolarEdge Monitor v1.1</title>
 
   <!-- PWA -->
   <link rel="manifest" href="manifest.json" />
@@ -279,6 +279,8 @@
       checkNotificationPermission();
       if (registration && Notification.permission === 'granted') {
         await registerHourlyBackgroundSync(registration);
+        // Start keep-alive for SW
+        startServiceWorkerKeepalive(registration);
       }
       await fetchConsumption();
       scheduleNightlyCheck();
@@ -286,15 +288,57 @@
       loadPeriodicNotifState();
     });
 
+    // Keep service worker alive for background notifications
+    let keepaliveInterval = null;
+    function startServiceWorkerKeepalive(registration) {
+      if (keepaliveInterval) {
+        clearInterval(keepaliveInterval);
+      }
+      
+      // Send periodic message to keep SW alive (every 30 seconds)
+      keepaliveInterval = setInterval(() => {
+        if (navigator.serviceWorker.controller) {
+          navigator.serviceWorker.controller.postMessage({
+            type: 'SCHEDULE_CHECK',
+            timestamp: Date.now()
+          });
+          console.log('[App] Sent keepalive message to SW');
+        }
+      }, 30 * 1000);
+    }
+
     // ─── Service Worker ──────────────────────────────────────────────────
     async function registerServiceWorker() {
       if ('serviceWorker' in navigator) {
         try {
-          const registration = await navigator.serviceWorker.register('sw.js');
-          console.log('[SW] Registered');
+          // Force update check: add a cache-busting query parameter
+          const registration = await navigator.serviceWorker.register('sw.js', {
+            scope: '/',
+            updateViaCache: 'none' // Always fetch the service worker without caching
+          });
+          console.log('[SW] Registered with scope:', registration.scope);
+          
+          // Check for updates in the background
+          registration.addEventListener('updatefound', () => {
+            console.log('[SW] Update found, installing new version');
+            const newWorker = registration.installing;
+            newWorker.addEventListener('statechange', () => {
+              if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                // New SW is ready, show message to user
+                showToast('App update available - refresh to activate', 'download', 'text-amber-400');
+              }
+            });
+          });
+          
+          // Keep checking for updates every minute
+          setInterval(() => {
+            registration.update();
+          }, 60 * 1000);
+          
           return registration;
         } catch (e) {
-          console.warn('[SW] Failed:', e);
+          console.error('[SW] Registration failed:', e);
+          showToast('Service worker registration failed', 'alert-circle', 'text-red-400');
         }
       }
       return null;
@@ -306,21 +350,28 @@
       if ('periodicSync' in registration) {
         try {
           const tags = await registration.periodicSync.getTags();
+          console.log('[BG Sync] Existing tags:', tags);
+          
           if (!tags.includes('hourly-check')) {
             await registration.periodicSync.register('hourly-check', {
-              minInterval: 60 * 60 * 1000
+              minInterval: 60 * 60 * 1000 // 1 hour
             });
-            console.log('[SW] Registered periodic hourly sync');
+            console.log('[BG Sync] Registered periodic hourly sync');
+            showToast('Hourly background notifications enabled', 'check-circle', 'text-green-400');
+          } else {
+            console.log('[BG Sync] Hourly sync already registered');
+            showToast('Hourly background sync active', 'check-circle', 'text-green-400');
           }
-          showToast('Hourly background notifications enabled', 'check-circle', 'text-green-400');
           return;
         } catch (e) {
-          console.warn('[SW] Periodic sync registration failed:', e);
+          console.warn('[BG Sync] Registration failed:', e);
+          showToast('Periodic background sync unavailable - using fallback', 'alert-triangle', 'text-yellow-400');
         }
+      } else {
+        console.warn('[BG Sync] Periodic sync API not available');
       }
 
-      console.warn('[SW] Periodic background sync unavailable');
-      showToast('Hourly background notifications unsupported', 'alert-triangle', 'text-yellow-400');
+      // Fallback for browsers that don't support Periodic Background Sync
       scheduleHourlyNotificationFallback();
     }
 
@@ -692,24 +743,64 @@
 
     // ─── Send Notification ────────────────────────────────────────────────
     function sendNotification(title, body, actions = [], tag = 'solar') {
-      if (Notification.permission !== 'granted') return;
+      if (Notification.permission !== 'granted') {
+        console.warn('[Notifications] Permission not granted');
+        return;
+      }
 
-      const sw = navigator.serviceWorker.controller;
-      if (sw) {
-        // Use SW for rich notifications with actions
+      // Method 1: Use Service Worker registration (works in background)
+      if ('serviceWorker' in navigator) {
         navigator.serviceWorker.ready.then(reg => {
           reg.showNotification(title, {
             body,
-            icon: 'icons/icon-192.png',
-            badge: 'icons/icon-192.png',
+            icon: '/icons/icon-192.png',
+            badge: '/icons/icon-192.png',
             tag,
             data: { consumptionKw: currentConsumptionKw },
-            actions
+            actions,
+            requireInteraction: actions.length > 0 // Keep notification if it has actions
+          }).then(() => {
+            console.log('[Notifications] Notification shown via SW');
+          }).catch((err) => {
+            console.error('[Notifications] SW notification failed:', err);
+            // Fallback to basic Notification API
+            try {
+              new Notification(title, { 
+                body, 
+                icon: '/icons/icon-192.png', 
+                tag,
+                badge: '/icons/icon-192.png'
+              });
+            } catch (e) {
+              console.error('[Notifications] Both methods failed:', e);
+            }
           });
+        }).catch((err) => {
+          console.error('[Notifications] SW ready failed:', err);
+          // Fallback to basic Notification API
+          try {
+            new Notification(title, { 
+              body, 
+              icon: '/icons/icon-192.png', 
+              tag,
+              badge: '/icons/icon-192.png'
+            });
+          } catch (e) {
+            console.error('[Notifications] Fallback failed:', e);
+          }
         });
       } else {
-        // Fallback to basic Notification API
-        new Notification(title, { body, icon: 'icons/icon-192.png', tag });
+        // Fallback: use basic Notification API
+        try {
+          new Notification(title, { 
+            body, 
+            icon: '/icons/icon-192.png', 
+            tag,
+            badge: '/icons/icon-192.png'
+          });
+        } catch (e) {
+          console.error('[Notifications] Basic Notification failed:', e);
+        }
       }
     }
 
