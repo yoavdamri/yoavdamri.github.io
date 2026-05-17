@@ -628,22 +628,34 @@
       if (icon) icon.style.animation = 'spin 1s linear infinite';
 
       try {
-        if (!('caches' in window)) throw new Error('Cache API not available');
+        showToast('Clearing all cache and restarting...', 'loader', 'text-amber-400');
 
-        const urls = ['/', '/index.html', '/manifest.json'];
-        const cache = await caches.open('solaredge-v1');
-        await Promise.all(urls.map((url) => cache.add(new Request(url, { cache: 'reload' }))));
-
-        showToast('App cache refreshed', 'check-circle', 'text-green-400');
-
-        if ('serviceWorker' in navigator) {
-          const reg = await navigator.serviceWorker.getRegistration();
-          if (reg) await reg.update();
+        // Step 1: Clear ALL caches
+        if ('caches' in window) {
+          const cacheNames = await caches.keys();
+          await Promise.all(cacheNames.map((name) => caches.delete(name)));
+          console.log('[Cache] Cleared all caches:', cacheNames);
         }
+
+        // Step 2: Unregister all service workers
+        if ('serviceWorker' in navigator) {
+          const registrations = await navigator.serviceWorker.getRegistrations();
+          await Promise.all(registrations.map((reg) => reg.unregister()));
+          console.log('[SW] Unregistered all service workers');
+        }
+
+        // Step 3: Clear localStorage for app state (optional - keeps user preferences)
+        // localStorage.clear(); // Uncomment if you want to also clear user settings
+
+        // Step 4: Reload the page after a short delay
+        showToast('App restarting...', 'check-circle', 'text-green-400');
+        setTimeout(() => {
+          window.location.reload(true); // Force reload from server
+        }, 500);
+
       } catch (e) {
-        console.error(e);
+        console.error('[Cache] Clear failed:', e);
         showToast(`Cache refresh failed: ${e.message}`, 'alert-circle', 'text-red-400');
-      } finally {
         if (btn) btn.disabled = false;
         if (icon) icon.style.animation = '';
       }
