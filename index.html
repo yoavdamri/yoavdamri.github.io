@@ -218,6 +218,27 @@
       </div>
     </div>
 
+    <!-- Periodic Notifications Toggle -->
+    <div class="glass rounded-2xl p-4 mb-4">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <i data-lucide="bell-ring" class="w-4 h-4 text-slate-400"></i>
+          <div>
+            <span class="text-xs font-medium text-slate-400 uppercase tracking-wider">Periodic Alerts</span>
+            <p class="text-xs text-slate-500 mt-0.5">Push notification every 2 minutes</p>
+          </div>
+        </div>
+        <button id="periodicNotifToggle" onclick="togglePeriodicNotifications()" 
+          class="relative inline-flex h-8 w-14 items-center rounded-full transition-colors bg-slate-700 hover:bg-slate-600">
+          <span id="periodicToggleIndicator" class="inline-block h-6 w-6 transform rounded-full bg-white transition-transform translate-x-1"></span>
+        </button>
+      </div>
+      <div id="periodicNotifStatus" class="mt-2 flex items-center gap-2">
+        <div class="w-1.5 h-1.5 rounded-full bg-slate-500"></div>
+        <span class="text-xs text-slate-500">Off</span>
+      </div>
+    </div>
+
     <!-- Schedule Info -->
     <div class="glass rounded-2xl p-4">
       <div class="flex items-center gap-2 mb-3">
@@ -262,6 +283,7 @@
       await fetchConsumption();
       scheduleNightlyCheck();
       updateNextCheckDisplay();
+      loadPeriodicNotifState();
     });
 
     // ─── Service Worker ──────────────────────────────────────────────────
@@ -741,6 +763,90 @@
       const diffM = Math.floor((diffMs % 3600000) / 60000);
       const diffS = Math.floor((diffMs % 60000) / 1000);
       document.getElementById('nextCheckTime').textContent = `Next check: in ${diffH}h ${diffM}m ${diffS}s`;
+    }
+
+    // ─── Periodic Notifications (Every 2 minutes) ────────────────────────
+    let periodicNotifInterval = null;
+
+    function togglePeriodicNotifications() {
+      if (Notification.permission !== 'granted') {
+        requestNotificationPermission();
+        return;
+      }
+
+      const isEnabled = periodicNotifInterval !== null;
+      
+      if (isEnabled) {
+        // Turn OFF
+        clearInterval(periodicNotifInterval);
+        periodicNotifInterval = null;
+        localStorage.setItem('periodicNotifEnabled', 'false');
+        updatePeriodicNotifUI(false);
+        showToast('Periodic notifications disabled', 'bell-off', 'text-slate-400');
+      } else {
+        // Turn ON
+        localStorage.setItem('periodicNotifEnabled', 'true');
+        updatePeriodicNotifUI(true);
+        sendPeriodicNotification(); // Send immediately
+        periodicNotifInterval = setInterval(sendPeriodicNotification, 2 * 60 * 1000);
+        showToast('Periodic notifications enabled - every 2 minutes', 'bell-ring', 'text-green-400');
+      }
+    }
+
+    function sendPeriodicNotification() {
+      if (Notification.permission !== 'granted') return;
+      if (currentConsumptionKw === null || currentConsumptionKw === undefined) {
+        fetchConsumption().then(() => {
+          if (currentConsumptionKw !== null) {
+            sendNotification(
+              '📊 SolarEdge Consumption Update',
+              `Current consumption: ${currentConsumptionKw.toFixed(2)}kW`,
+              [],
+              'solar-periodic'
+            );
+          }
+        });
+      } else {
+        sendNotification(
+          '📊 SolarEdge Consumption Update',
+          `Current consumption: ${currentConsumptionKw.toFixed(2)}kW`,
+          [],
+          'solar-periodic'
+        );
+      }
+    }
+
+    function updatePeriodicNotifUI(isEnabled) {
+      const toggle = document.getElementById('periodicNotifToggle');
+      const indicator = document.getElementById('periodicToggleIndicator');
+      const status = document.getElementById('periodicNotifStatus');
+
+      if (isEnabled) {
+        // ON state
+        toggle?.classList.add('bg-green-600');
+        toggle?.classList.remove('bg-slate-700');
+        indicator?.classList.add('translate-x-7');
+        indicator?.classList.remove('translate-x-1');
+        status.innerHTML = '<div class="w-1.5 h-1.5 rounded-full bg-green-400"></div><span class="text-xs text-green-400 font-medium">Active - sending every 2 min</span>';
+      } else {
+        // OFF state
+        toggle?.classList.remove('bg-green-600');
+        toggle?.classList.add('bg-slate-700');
+        indicator?.classList.remove('translate-x-7');
+        indicator?.classList.add('translate-x-1');
+        status.innerHTML = '<div class="w-1.5 h-1.5 rounded-full bg-slate-500"></div><span class="text-xs text-slate-500">Off</span>';
+      }
+    }
+
+    function loadPeriodicNotifState() {
+      const enabled = localStorage.getItem('periodicNotifEnabled') === 'true';
+      if (enabled && Notification.permission === 'granted') {
+        // Auto-enable if it was previously enabled
+        localStorage.setItem('periodicNotifEnabled', 'true');
+        updatePeriodicNotifUI(true);
+        sendPeriodicNotification();
+        periodicNotifInterval = setInterval(sendPeriodicNotification, 2 * 60 * 1000);
+      }
     }
 
     // ─── Toast ────────────────────────────────────────────────────────────
