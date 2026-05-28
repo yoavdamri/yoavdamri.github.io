@@ -2,9 +2,9 @@
 // Version: 2 (ensures browsers fetch the latest version)
 const CACHE_NAME = 'solaredge-v2';
 const URLS_TO_CACHE = [
-  '/',
-  '/index.html',
-  '/manifest.json'
+  './',
+  './index.html',
+  './manifest.json'
 ];
 
 // ─── Install ───────────────────────────────────────────────────────────────
@@ -49,9 +49,9 @@ self.addEventListener('fetch', (event) => {
     event.respondWith(
       caches.match(event.request)
         .then((cached) => {
-          return cached || fetch(event.request).catch(() => caches.match('/index.html'));
+          return cached || fetch(event.request).catch(() => caches.match('/solaredge/index.html'));
         })
-        .catch(() => caches.match('/index.html'))
+        .catch(() => caches.match('/solaredge/index.html'))
     );
   }
 });
@@ -72,8 +72,8 @@ self.addEventListener('push', (event) => {
     event.waitUntil(
       self.registration.showNotification(data.title || 'SolarEdge Alert', {
         body: data.body || 'New notification',
-        icon: data.icon || '/icons/icon-192.png',
-        badge: '/icons/icon-192.png',
+        icon: data.icon || '/solaredge/icons/icon-192.png',
+        badge: '/solaredge/icons/icon-192.png',
         tag: data.tag || 'solar-alert',
         data: data,
         actions: data.actions || [],
@@ -87,8 +87,8 @@ self.addEventListener('push', (event) => {
           // Fallback: try again without actions
           return self.registration.showNotification(data.title || 'SolarEdge Alert', {
             body: data.body || 'New notification',
-            icon: data.icon || '/icons/icon-192.png',
-            badge: '/icons/icon-192.png',
+            icon: data.icon || '/solaredge/icons/icon-192.png',
+            badge: '/solaredge/icons/icon-192.png',
             tag: data.tag || 'solar-alert',
             data: data
           });
@@ -99,8 +99,8 @@ self.addEventListener('push', (event) => {
     event.waitUntil(
       self.registration.showNotification('SolarEdge Alert', {
         body: 'Received a notification',
-        icon: '/icons/icon-192.png',
-        badge: '/icons/icon-192.png'
+        icon: '/solaredge/icons/icon-192.png',
+        badge: '/solaredge/icons/icon-192.png'
       })
     );
   }
@@ -151,12 +151,12 @@ self.addEventListener('notificationclick', (event) => {
             if (consumptionKw > 9) {
               title = '⚡ High Consumption ✓';
               body = `Consumption is ${kw}kW and car is being charging`;
-              icon = '/icons/icon-192.png';
+              icon = '/solaredge/icons/icon-192.png';
               actions = [];
             } else if (consumptionKw < 5) {
               title = 'ℹ️ Car Status';
               body = 'Car is not charging';
-              icon = '/icons/icon-192.png';
+              icon = '/solaredge/icons/icon-192.png';
               actions = [
                 { action: 'snooze15', title: 'Remind me in 15 mins' },
                 { action: 'snooze60', title: 'Remind me in 1 hour' }
@@ -164,7 +164,7 @@ self.addEventListener('notificationclick', (event) => {
             } else {
               title = '🔆 SolarEdge Monitor v1.1';
               body = `Current consumption: ${kw}kW`;
-              icon = '/icons/icon-192.png';
+              icon = '/solaredge/icons/icon-192.png';
               actions = [];
             }
 
@@ -172,7 +172,7 @@ self.addEventListener('notificationclick', (event) => {
             await self.registration.showNotification(title, {
               body,
               icon,
-              badge: '/icons/icon-192.png',
+              badge: '/solaredge/icons/icon-192.png',
               tag: 'solar-snooze',
               data: { consumptionKw },
               actions
@@ -181,7 +181,7 @@ self.addEventListener('notificationclick', (event) => {
             console.error('[SW] Error in snooze handler:', e);
             await self.registration.showNotification('SolarEdge Monitor', {
               body: 'Could not fetch consumption data',
-              icon: '/icons/icon-192.png'
+              icon: '/solaredge/icons/icon-192.png'
             });
           }
           resolve();
@@ -201,11 +201,11 @@ self.addEventListener('notificationclick', (event) => {
             }
           }
           console.log('[SW] No client to focus, opening new window');
-          return clients.openWindow('/');
+          return clients.openWindow('/solaredge/');
         })
         .catch((err) => {
           console.error('[SW] Error in notification click:', err);
-          return clients.openWindow('/');
+          return clients.openWindow('/solaredge/');
         })
     );
   }
@@ -253,8 +253,8 @@ async function performHourlyNotification() {
     console.log('[SW] Showing hourly notification:', title);
     await self.registration.showNotification(title, {
       body,
-      icon: '/icons/icon-192.png',
-      badge: '/icons/icon-192.png',
+      icon: '/solaredge/icons/icon-192.png',
+      badge: '/solaredge/icons/icon-192.png',
       tag: 'solar-hourly',
       data: { latestKw: latest != null ? latest / 1000 : null }
     });
@@ -262,8 +262,8 @@ async function performHourlyNotification() {
     console.error('[SW] Error in hourly notification:', e);
     await self.registration.showNotification('SolarEdge hourly report', {
       body: 'Hourly update failed',
-      icon: '/icons/icon-192.png',
-      badge: '/icons/icon-192.png',
+      icon: '/solaredge/icons/icon-192.png',
+      badge: '/solaredge/icons/icon-192.png',
       tag: 'solar-hourly-failed'
     });
   }
@@ -290,8 +290,8 @@ self.addEventListener('message', (event) => {
     const { title, body, icon, tag, actions } = event.data;
     self.registration.showNotification(title, {
       body,
-      icon: icon || '/icons/icon-192.png',
-      badge: '/icons/icon-192.png',
+      icon: icon || '/solaredge/icons/icon-192.png',
+      badge: '/solaredge/icons/icon-192.png',
       tag: tag || 'solar-app-initiated',
       actions: actions || []
     }).then(() => {
