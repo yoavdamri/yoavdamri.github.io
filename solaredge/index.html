@@ -1,0 +1,984 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>SolarEdge Monitor v1.1</title>
+
+  <!-- PWA -->
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#f59e0b" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="SolarEdge" />
+  <link rel="apple-touch-icon" href="icons/icon-192.png" />
+
+  <!-- Tailwind -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            solar: { 400: '#fbbf24', 500: '#f59e0b', 600: '#d97706' }
+          },
+          animation: {
+            'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+            'spin-slow': 'spin 8s linear infinite',
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+
+  <style>
+    body { font-family: 'Inter', system-ui, sans-serif; }
+    .glass {
+      background: rgba(15, 23, 42, 0.7);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(255,255,255,0.08);
+    }
+    .glow-amber { box-shadow: 0 0 30px rgba(245, 158, 11, 0.3); }
+    .glow-green { box-shadow: 0 0 30px rgba(34, 197, 94, 0.3); }
+    .glow-red { box-shadow: 0 0 30px rgba(239, 68, 68, 0.3); }
+    .glow-blue { box-shadow: 0 0 30px rgba(59, 130, 246, 0.3); }
+    .ring-animate {
+      animation: ring-pulse 2s ease-in-out infinite;
+    }
+    @keyframes ring-pulse {
+      0%, 100% { transform: scale(1); opacity: 0.6; }
+      50% { transform: scale(1.08); opacity: 1; }
+    }
+    .chart-bar {
+      transition: height 0.5s ease;
+    }
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-track { background: #1e293b; }
+    ::-webkit-scrollbar-thumb { background: #f59e0b; border-radius: 2px; }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen overflow-x-hidden">
+
+  <!-- Background decoration -->
+  <div class="fixed inset-0 pointer-events-none overflow-hidden">
+    <div class="absolute -top-32 -right-32 w-96 h-96 bg-amber-500/10 rounded-full blur-3xl"></div>
+    <div class="absolute -bottom-32 -left-32 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl"></div>
+  </div>
+
+  <div class="relative z-10 max-w-md mx-auto px-4 py-6 pb-24">
+
+    <!-- Header -->
+    <header class="flex items-center justify-between mb-6">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-amber-500/20 flex items-center justify-center ring-1 ring-amber-500/40">
+          <i data-lucide="sun" class="w-5 h-5 text-amber-400"></i>
+        </div>
+        <div>
+          <h1 class="text-lg font-bold text-white leading-tight">SolarEdge Monitor</h1>
+          <p class="text-xs text-slate-400">Site #1892524</p>
+        </div>
+      </div>
+      <button id="refreshBtn" onclick="fetchConsumption()" class="w-9 h-9 rounded-xl glass flex items-center justify-center hover:bg-slate-700/50 transition-all active:scale-95">
+        <i data-lucide="refresh-cw" class="w-4 h-4 text-slate-300" id="refreshIcon"></i>
+      </button>
+    </header>
+
+    <!-- Main Consumption Card -->
+    <div id="mainCard" class="glass rounded-2xl p-6 mb-4 glow-amber transition-all duration-500">
+      <div class="flex items-center justify-between mb-2">
+        <span class="text-xs font-medium text-slate-400 uppercase tracking-wider">Live Consumption</span>
+        <span id="statusBadge" class="text-xs px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-400 font-medium">Loading...</span>
+      </div>
+
+      <!-- Big number -->
+      <div class="flex items-end gap-2 mb-1">
+        <span id="consumptionValue" class="text-6xl font-black text-white tracking-tight">—</span>
+        <span class="text-2xl font-bold text-slate-400 mb-2">kW</span>
+      </div>
+      <p id="lastReadingTime" class="text-xs text-slate-500 mb-4">Fetching data…</p>
+
+      <!-- Status icon -->
+      <div id="statusIconWrap" class="flex items-center gap-2 text-sm">
+        <div id="statusDot" class="w-2 h-2 rounded-full bg-amber-400 ring-animate"></div>
+        <span id="statusText" class="text-slate-400">Initializing…</span>
+      </div>
+    </div>
+
+    <!-- Stats Row -->
+    <div class="grid grid-cols-3 gap-3 mb-4">
+      <div class="glass rounded-xl p-3 text-center">
+        <div class="text-xs text-slate-500 mb-1">Peak Today</div>
+        <div id="peakValue" class="text-lg font-bold text-amber-400">—</div>
+        <div class="text-xs text-slate-600">kW</div>
+      </div>
+      <div class="glass rounded-xl p-3 text-center">
+        <div class="text-xs text-slate-500 mb-1">Average</div>
+        <div id="avgValue" class="text-lg font-bold text-blue-400">—</div>
+        <div class="text-xs text-slate-600">kW</div>
+      </div>
+      <div class="glass rounded-xl p-3 text-center">
+        <div class="text-xs text-slate-500 mb-1">Data Points</div>
+        <div id="dataPoints" class="text-lg font-bold text-slate-300">—</div>
+        <div class="text-xs text-slate-600">readings</div>
+      </div>
+    </div>
+
+    <!-- Mini Chart -->
+    <div class="glass rounded-2xl p-4 mb-4">
+      <div class="flex items-center justify-between mb-3">
+        <span class="text-xs font-medium text-slate-400 uppercase tracking-wider">Today's Profile</span>
+        <i data-lucide="bar-chart-2" class="w-4 h-4 text-slate-600"></i>
+      </div>
+      <div id="chart" class="flex items-end gap-0.5 h-16 w-full">
+        <div class="flex-1 flex items-center justify-center text-slate-600 text-xs">Loading chart…</div>
+      </div>
+    </div>
+
+    <!-- Car Charging Status -->
+    <div id="carCard" class="glass rounded-2xl p-4 mb-4 hidden">
+      <div class="flex items-center gap-3">
+        <div id="carIconWrap" class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0">
+          <i data-lucide="car" class="w-5 h-5"></i>
+        </div>
+        <div>
+          <div class="text-sm font-semibold text-white" id="carTitle">Car Status</div>
+          <div class="text-xs text-slate-400" id="carSubtitle">—</div>
+        </div>
+        <div class="ml-auto">
+          <i id="carStatusIcon" data-lucide="circle" class="w-5 h-5"></i>
+        </div>
+      </div>
+    </div>
+
+    <!-- Notification Permission -->
+    <div id="notifBanner" class="glass rounded-2xl p-4 mb-4 border border-amber-500/30 hidden">
+      <div class="flex items-start gap-3">
+        <i data-lucide="bell-off" class="w-5 h-5 text-amber-400 flex-shrink-0 mt-0.5"></i>
+        <div class="flex-1">
+          <p class="text-sm font-medium text-white">Enable Notifications</p>
+          <p class="text-xs text-slate-400 mt-0.5">Get alerts when your car starts or stops charging at 22:30 daily.</p>
+        </div>
+        <button onclick="requestNotificationPermission()" class="text-xs bg-amber-500 hover:bg-amber-400 text-slate-900 font-bold px-3 py-1.5 rounded-lg transition-colors flex-shrink-0">
+          Enable
+        </button>
+      </div>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
+      <button onclick="testNotification()" id="testNotifBtn"
+        class="glass rounded-xl p-3 flex items-center gap-2 hover:bg-slate-700/50 transition-all active:scale-95 border border-slate-700/50">
+        <div class="w-8 h-8 rounded-lg bg-violet-500/20 flex items-center justify-center flex-shrink-0">
+          <i data-lucide="bell" class="w-4 h-4 text-violet-400"></i>
+        </div>
+        <div class="text-left">
+          <div class="text-xs font-semibold text-white">Test Alert</div>
+          <div class="text-xs text-slate-500">In 10 seconds</div>
+        </div>
+      </button>
+
+      <button onclick="checkNow()"
+        class="glass rounded-xl p-3 flex items-center gap-2 hover:bg-slate-700/50 transition-all active:scale-95 border border-slate-700/50">
+        <div class="w-8 h-8 rounded-lg bg-green-500/20 flex items-center justify-center flex-shrink-0">
+          <i data-lucide="zap" class="w-4 h-4 text-green-400"></i>
+        </div>
+        <div class="text-left">
+          <div class="text-xs font-semibold text-white">Check Now</div>
+          <div class="text-xs text-slate-500">Run 22:30 logic</div>
+        </div>
+      </button>
+
+      <button onclick="refreshAppCache()" id="refreshCacheBtn"
+        class="glass rounded-xl p-3 flex items-center gap-2 hover:bg-slate-700/50 transition-all active:scale-95 border border-slate-700/50">
+        <div class="w-8 h-8 rounded-lg bg-amber-500/20 flex items-center justify-center flex-shrink-0">
+          <i data-lucide="refresh-ccw" class="w-4 h-4 text-amber-400"></i>
+        </div>
+        <div class="text-left">
+          <div class="text-xs font-semibold text-white">Refresh Cache</div>
+          <div class="text-xs text-slate-500">Update PWA assets</div>
+        </div>
+      </button>
+    </div>
+
+    <!-- Current Time Display -->
+    <div id="currentTimeCard" class="glass rounded-2xl p-4 mb-4">
+      <div class="flex items-center gap-2 mb-2">
+        <i data-lucide="calendar" class="w-4 h-4 text-slate-400"></i>
+        <span class="text-xs font-medium text-slate-400 uppercase tracking-wider">Current Time</span>
+      </div>
+      <div class="text-center">
+        <p id="currentDateTime" class="text-sm font-semibold text-white">—</p>
+        <p id="israelTimeZone" class="text-xs text-slate-500 mt-1">Israel Time (IDT)</p>
+      </div>
+    </div>
+
+    <!-- Periodic Notifications Toggle -->
+    <div class="glass rounded-2xl p-4 mb-4">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <i data-lucide="bell-ring" class="w-4 h-4 text-slate-400"></i>
+          <div>
+            <span class="text-xs font-medium text-slate-400 uppercase tracking-wider">Periodic Alerts</span>
+            <p class="text-xs text-slate-500 mt-0.5">Push notification every 2 minutes</p>
+          </div>
+        </div>
+        <button id="periodicNotifToggle" onclick="togglePeriodicNotifications()" 
+          class="relative inline-flex h-8 w-14 items-center rounded-full transition-colors bg-slate-700 hover:bg-slate-600">
+          <span id="periodicToggleIndicator" class="inline-block h-6 w-6 transform rounded-full bg-white transition-transform translate-x-1"></span>
+        </button>
+      </div>
+      <div id="periodicNotifStatus" class="mt-2 flex items-center gap-2">
+        <div class="w-1.5 h-1.5 rounded-full bg-slate-500"></div>
+        <span class="text-xs text-slate-500">Off</span>
+      </div>
+    </div>
+
+    <!-- Schedule Info -->
+    <div class="glass rounded-2xl p-4">
+      <div class="flex items-center gap-2 mb-3">
+        <i data-lucide="clock" class="w-4 h-4 text-slate-400"></i>
+        <span class="text-xs font-medium text-slate-400 uppercase tracking-wider">Daily Schedule</span>
+      </div>
+      <div class="flex items-center justify-between">
+        <div>
+          <p class="text-sm font-semibold text-white">22:30 — Nightly Check</p>
+          <p class="text-xs text-slate-500">Israel Time (IDT) · Auto-notification</p>
+        </div>
+        <div id="scheduleStatus" class="flex items-center gap-1.5">
+          <div class="w-1.5 h-1.5 rounded-full bg-green-400"></div>
+          <span class="text-xs text-green-400 font-medium">Active</span>
+        </div>
+      </div>
+      <div id="nextCheckTime" class="mt-2 text-xs text-slate-600"></div>
+    </div>
+
+    <!-- Toast notification -->
+    <div id="toast" class="fixed bottom-6 left-4 right-4 max-w-md mx-auto glass rounded-xl p-3 flex items-center gap-3 transform translate-y-24 opacity-0 transition-all duration-300 z-50 border border-slate-700">
+      <i id="toastIcon" data-lucide="info" class="w-4 h-4 text-blue-400 flex-shrink-0"></i>
+      <span id="toastMsg" class="text-sm text-slate-200"></span>
+    </div>
+
+  </div>
+
+  <script>
+    let currentConsumptionKw = null;
+    let scheduledCheckTimer = null;
+    let testNotifTimer = null;
+    let daytimeAlertSent = false;
+
+    // ─── Init ────────────────────────────────────────────────────────────
+    window.addEventListener('load', async () => {
+      lucide.createIcons();
+      const registration = await registerServiceWorker();
+      checkNotificationPermission();
+      if (registration && Notification.permission === 'granted') {
+        await registerHourlyBackgroundSync(registration);
+        // Start keep-alive for SW
+        startServiceWorkerKeepalive(registration);
+      }
+      await fetchConsumption();
+      scheduleNightlyCheck();
+      updateNextCheckDisplay();
+      loadPeriodicNotifState();
+    });
+
+    // Keep service worker alive for background notifications
+    let keepaliveInterval = null;
+    function startServiceWorkerKeepalive(registration) {
+      if (keepaliveInterval) {
+        clearInterval(keepaliveInterval);
+      }
+      
+      // Send periodic message to keep SW alive (every 30 seconds)
+      keepaliveInterval = setInterval(() => {
+        if (navigator.serviceWorker.controller) {
+          navigator.serviceWorker.controller.postMessage({
+            type: 'SCHEDULE_CHECK',
+            timestamp: Date.now()
+          });
+          console.log('[App] Sent keepalive message to SW');
+        }
+      }, 30 * 1000);
+    }
+
+    // ─── Service Worker ──────────────────────────────────────────────────
+    async function registerServiceWorker() {
+      if ('serviceWorker' in navigator) {
+        try {
+          // Force update check: add a cache-busting query parameter
+          const registration = await navigator.serviceWorker.register('sw.js', {
+            scope: '/',
+            updateViaCache: 'none' // Always fetch the service worker without caching
+          });
+          console.log('[SW] Registered with scope:', registration.scope);
+          
+          // Check for updates in the background
+          registration.addEventListener('updatefound', () => {
+            console.log('[SW] Update found, installing new version');
+            const newWorker = registration.installing;
+            newWorker.addEventListener('statechange', () => {
+              if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                // New SW is ready, show message to user
+                showToast('App update available - refresh to activate', 'download', 'text-amber-400');
+              }
+            });
+          });
+          
+          // Keep checking for updates every minute
+          setInterval(() => {
+            registration.update();
+          }, 60 * 1000);
+          
+          return registration;
+        } catch (e) {
+          console.error('[SW] Registration failed:', e);
+          showToast('Service worker registration failed', 'alert-circle', 'text-red-400');
+        }
+      }
+      return null;
+    }
+
+    async function registerHourlyBackgroundSync(registration) {
+      if (!registration) return;
+
+      if ('periodicSync' in registration) {
+        try {
+          const tags = await registration.periodicSync.getTags();
+          console.log('[BG Sync] Existing tags:', tags);
+          
+          if (!tags.includes('hourly-check')) {
+            await registration.periodicSync.register('hourly-check', {
+              minInterval: 60 * 60 * 1000 // 1 hour
+            });
+            console.log('[BG Sync] Registered periodic hourly sync');
+            showToast('Hourly background notifications enabled', 'check-circle', 'text-green-400');
+          } else {
+            console.log('[BG Sync] Hourly sync already registered');
+            showToast('Hourly background sync active', 'check-circle', 'text-green-400');
+          }
+          return;
+        } catch (e) {
+          console.warn('[BG Sync] Registration failed:', e);
+          showToast('Periodic background sync unavailable - using fallback', 'alert-triangle', 'text-yellow-400');
+        }
+      } else {
+        console.warn('[BG Sync] Periodic sync API not available');
+      }
+
+      // Fallback for browsers that don't support Periodic Background Sync
+      scheduleHourlyNotificationFallback();
+    }
+
+    let hourlyFallbackTimer = null;
+    function scheduleHourlyNotificationFallback() {
+      if (hourlyFallbackTimer) {
+        clearTimeout(hourlyFallbackTimer);
+      }
+
+      const now = new Date();
+      const next = new Date(now);
+      next.setMinutes(0, 0, 0, 0);
+      next.setHours(next.getHours() + 1);
+
+      const delay = next.getTime() - now.getTime();
+      hourlyFallbackTimer = setTimeout(async () => {
+        if (Notification.permission === 'granted') {
+          await fetchConsumption();
+          if (currentConsumptionKw !== null) {
+            sendNotification(
+              '🔔 Hourly SolarEdge update',
+              `Latest consumption is ${currentConsumptionKw.toFixed(2)}kW`,
+              [],
+              'solar-hourly-fallback'
+            );
+          }
+        }
+        scheduleHourlyNotificationFallback();
+      }, delay);
+    }
+
+    // ─── Notification Permission ─────────────────────────────────────────
+    function checkNotificationPermission() {
+      if (!('Notification' in window)) return;
+      if (Notification.permission === 'default') {
+        document.getElementById('notifBanner').classList.remove('hidden');
+      }
+    }
+
+    async function requestNotificationPermission() {
+      const perm = await Notification.requestPermission();
+      if (perm === 'granted') {
+        document.getElementById('notifBanner').classList.add('hidden');
+        showToast('Notifications enabled! ✓', 'check-circle', 'text-green-400');
+
+        if ('serviceWorker' in navigator) {
+          const registration = await navigator.serviceWorker.ready;
+          await registerHourlyBackgroundSync(registration);
+        }
+      } else {
+        showToast('Notifications blocked. Please enable in browser settings.', 'alert-circle', 'text-red-400');
+      }
+    }
+
+    // ─── Get Last 3 Hours Time Range ────────────────────────────────────
+    function getLast3HoursTimeRange() {
+      const now = new Date();
+      const threeHoursAgo = new Date(now.getTime() - 3 * 60 * 60 * 1000);
+      
+      const formatTime = (date) => {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        const hours = String(date.getHours()).padStart(2, '0');
+        const mins = String(date.getMinutes()).padStart(2, '0');
+        const secs = String(date.getSeconds()).padStart(2, '0');
+        return `${year}-${month}-${day} ${hours}:${mins}:${secs}`;
+      };
+      
+      return {
+        startTime: formatTime(threeHoursAgo),
+        endTime: formatTime(now)
+      };
+    }
+
+    // ─── Fetch Consumption ───────────────────────────────────────────────
+    async function fetchConsumption() {
+      const btn = document.getElementById('refreshBtn');
+      const icon = document.getElementById('refreshIcon');
+      icon.style.animation = 'spin 1s linear infinite';
+      btn.disabled = true;
+
+      try {
+        const { startTime, endTime } = getLast3HoursTimeRange();
+        const startTimeEnc = encodeURIComponent(startTime);
+        const endTimeEnc = encodeURIComponent(endTime);
+        const url = `https://monitoringapi.solaredge.com/site/1892524/powerDetails?meters=CONSUMPTION&startTime=${startTimeEnc}&endTime=${endTimeEnc}&api_key=LN4T1U86HLWSV31ICAFO20P8A6H03MTT`;
+        const resp = await fetch(url, { method: 'GET' });
+        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+        const json = await resp.json();
+
+        const values = json?.powerDetails?.meters?.[0]?.values || [];
+        const nonNull = values.filter(v => v.value != null);
+
+        if (nonNull.length === 0) {
+          setStatus('No data available', 'slate');
+          return;
+        }
+
+        const latest = nonNull[nonNull.length - 1];
+        currentConsumptionKw = latest.value / 1000;
+
+        // Update main display
+        document.getElementById('consumptionValue').textContent = currentConsumptionKw.toFixed(2);
+        document.getElementById('lastReadingTime').textContent = `Last reading: ${latest.date.split(' ')[1].substring(0,5)} · ${nonNull.length} readings today`;
+
+        // Stats
+        const peak = Math.max(...nonNull.map(v => v.value)) / 1000;
+        const avg = nonNull.reduce((a, v) => a + v.value, 0) / nonNull.length / 1000;
+        document.getElementById('peakValue').textContent = peak.toFixed(2);
+        document.getElementById('avgValue').textContent = avg.toFixed(2);
+        document.getElementById('dataPoints').textContent = nonNull.length;
+
+        // Chart
+        renderChart(nonNull);
+
+        // Card glow & status
+        updateConsumptionUI(currentConsumptionKw);
+
+        // Car card
+        updateCarCard(currentConsumptionKw);
+
+        // Daytime notification threshold
+        checkDaytimeNotification(currentConsumptionKw);
+
+      } catch (e) {
+        console.error(e);
+        showToast('Failed to fetch data: ' + e.message, 'alert-triangle', 'text-red-400');
+        setStatus('Error', 'red');
+      } finally {
+        icon.style.animation = '';
+        btn.disabled = false;
+      }
+    }
+
+    function updateConsumptionUI(kw) {
+      const card = document.getElementById('mainCard');
+      const badge = document.getElementById('statusBadge');
+      const dot = document.getElementById('statusDot');
+      const text = document.getElementById('statusText');
+
+      if (!card || !badge || !dot || !text) {
+        console.error('Required DOM elements not found');
+        return;
+      }
+
+      card.className = card.className.replace(/glow-\w+/g, '');
+
+      if (kw > 9) {
+        card.classList.add('glow-green');
+        badge.className = badge.className.replace(/text-\w+-\d+|bg-\w+-\d+\/\d+/g, '');
+        badge.classList.add('bg-green-500/20', 'text-green-400');
+        badge.textContent = 'High — Charging';
+        dot.className = 'w-2 h-2 rounded-full bg-green-400 ring-animate';
+        text.textContent = 'Car appears to be charging';
+        text.className = 'text-green-300 text-sm';
+      } else if (kw < 5) {
+        card.classList.add('glow-blue');
+        badge.className = badge.className.replace(/text-\w+-\d+|bg-\w+-\d+\/\d+/g, '');
+        badge.classList.add('bg-blue-500/20', 'text-blue-400');
+        badge.textContent = 'Normal — Idle';
+        dot.className = 'w-2 h-2 rounded-full bg-blue-400 ring-animate';
+        text.textContent = 'Car is not charging';
+        text.className = 'text-blue-300 text-sm';
+      } else {
+        card.classList.add('glow-amber');
+        badge.className = badge.className.replace(/text-\w+-\d+|bg-\w+-\d+\/\d+/g, '');
+        badge.classList.add('bg-amber-500/20', 'text-amber-400');
+        badge.textContent = 'Moderate';
+        dot.className = 'w-2 h-2 rounded-full bg-amber-400 ring-animate';
+        text.textContent = 'Normal consumption range';
+        text.className = 'text-amber-300 text-sm';
+      }
+    }
+
+    function updateCarCard(kw) {
+      const card = document.getElementById('carCard');
+      const iconWrap = document.getElementById('carIconWrap');
+      const title = document.getElementById('carTitle');
+      const subtitle = document.getElementById('carSubtitle');
+      const icon = iconWrap?.querySelector('i');
+
+      if (!card || !iconWrap || !title || !subtitle || !icon) {
+        console.error('Car card DOM elements not found');
+        return;
+      }
+
+      card.classList.remove('hidden');
+
+      if (kw > 9) {
+        iconWrap.className = 'w-10 h-10 rounded-xl bg-green-500/20 flex items-center justify-center flex-shrink-0';
+        icon.className = 'w-5 h-5 text-green-400';
+        title.textContent = 'Car is Charging';
+        subtitle.textContent = `Drawing ~${kw.toFixed(1)}kW — high consumption detected`;
+        card.className = card.className.replace(/border-\S+/g, '');
+        card.classList.add('border', 'border-green-500/30');
+      } else {
+        iconWrap.className = 'w-10 h-10 rounded-xl bg-slate-700/50 flex items-center justify-center flex-shrink-0';
+        icon.className = 'w-5 h-5 text-slate-400';
+        title.textContent = 'Car Not Charging';
+        subtitle.textContent = `Consumption is ${kw.toFixed(1)}kW — below charging threshold`;
+        card.className = card.className.replace(/border-\S+/g, '');
+        card.classList.add('border', 'border-slate-700/30');
+      }
+      lucide.createIcons();
+    }
+
+    function checkDaytimeNotification(kw) {
+      const now = new Date();
+      const israelTime = new Date(now.getTime() + 3 * 60 * 60 * 1000);
+      const hour = israelTime.getUTCHours();
+
+      if (hour >= 7 && hour < 22) {
+        if (kw > 5 && !daytimeAlertSent) {
+          sendNotification(
+            '⚠️ High Consumption Alert',
+            `Current consumption is ${kw.toFixed(2)}kW`,
+            [],
+            'solar-day-warning'
+          );
+          daytimeAlertSent = true;
+        } else if (kw <= 5) {
+          daytimeAlertSent = false;
+        }
+      } else {
+        daytimeAlertSent = false;
+      }
+    }
+
+    function renderChart(values) {
+      const chart = document.getElementById('chart');
+      if (!chart) { 
+        console.error('Chart element not found'); 
+        return; 
+      }
+      if (!values.length) { chart.innerHTML = '<div class="flex-1 flex items-center justify-center text-slate-600 text-xs">No data</div>'; return; }
+
+      const max = Math.max(...values.map(v => v.value));
+      const step = Math.max(1, Math.floor(values.length / 48));
+      const sampled = values.filter((_, i) => i % step === 0);
+
+      chart.innerHTML = sampled.map(v => {
+        const pct = max > 0 ? (v.value / max) * 100 : 0;
+        const kw = v.value / 1000;
+        const color = kw > 9 ? '#22c55e' : kw < 5 ? '#60a5fa' : '#f59e0b';
+        const h = Math.max(2, Math.round(pct * 0.64));
+        return `<div class="flex-1 rounded-t" style="height:${h}px;background:${color};opacity:0.7;min-height:2px;" title="${v.date}: ${kw.toFixed(2)}kW"></div>`;
+      }).join('');
+    }
+
+    function setStatus(text, color) {
+      document.getElementById('statusText').textContent = text;
+    }
+
+    // ─── Test Notification ────────────────────────────────────────────────
+    async function testNotification() {
+      if (Notification.permission !== 'granted') {
+        const perm = await Notification.requestPermission();
+        if (perm !== 'granted') {
+          showToast('Please allow notifications first', 'alert-circle', 'text-red-400');
+          return;
+        }
+      }
+
+      if (testNotifTimer) {
+        clearTimeout(testNotifTimer);
+        testNotifTimer = null;
+        document.getElementById('testNotifBtn').querySelector('.text-xs.text-slate-500').textContent = 'In 10 seconds';
+        showToast('Test notification cancelled', 'x', 'text-slate-400');
+        return;
+      }
+
+      showToast('Test notification in 10 seconds…', 'clock', 'text-violet-400');
+      document.getElementById('testNotifBtn').querySelector('.text-xs.text-slate-500').textContent = 'Tap to cancel';
+
+      testNotifTimer = setTimeout(async () => {
+        testNotifTimer = null;
+        document.getElementById('testNotifBtn').querySelector('.text-xs.text-slate-500').textContent = 'In 10 seconds';
+
+        // Refresh data first
+        if (!currentConsumptionKw) await fetchConsumption();
+        const kw = currentConsumptionKw ? currentConsumptionKw.toFixed(2) : 'N/A';
+
+        sendNotification(
+          '🔔 Test Alert — SolarEdge',
+          `Current consumption: ${kw}kW`,
+          [],
+          'solar-test'
+        );
+      }, 10000);
+    }
+
+    // ─── Check Now (run 22:30 logic immediately) ──────────────────────────
+    async function checkNow() {
+      await fetchConsumption();
+      if (!currentConsumptionKw) return;
+      runNightlyLogic(currentConsumptionKw);
+      showToast('Nightly check logic executed!', 'check-circle', 'text-green-400');
+    }
+
+    async function refreshAppCache() {
+      const btn = document.getElementById('refreshCacheBtn');
+      const icon = btn?.querySelector('i');
+      if (btn) btn.disabled = true;
+      if (icon) icon.style.animation = 'spin 1s linear infinite';
+
+      try {
+        showToast('Clearing all cache and restarting...', 'loader', 'text-amber-400');
+
+        // Step 1: Clear ALL caches
+        if ('caches' in window) {
+          const cacheNames = await caches.keys();
+          await Promise.all(cacheNames.map((name) => caches.delete(name)));
+          console.log('[Cache] Cleared all caches:', cacheNames);
+        }
+
+        // Step 2: Unregister all service workers
+        if ('serviceWorker' in navigator) {
+          const registrations = await navigator.serviceWorker.getRegistrations();
+          await Promise.all(registrations.map((reg) => reg.unregister()));
+          console.log('[SW] Unregistered all service workers');
+        }
+
+        // Step 3: Clear localStorage for app state (optional - keeps user preferences)
+        // localStorage.clear(); // Uncomment if you want to also clear user settings
+
+        // Step 4: Reload the page after a short delay
+        showToast('App restarting...', 'check-circle', 'text-green-400');
+        setTimeout(() => {
+          window.location.reload(true); // Force reload from server
+        }, 500);
+
+      } catch (e) {
+        console.error('[Cache] Clear failed:', e);
+        showToast(`Cache refresh failed: ${e.message}`, 'alert-circle', 'text-red-400');
+        if (btn) btn.disabled = false;
+        if (icon) icon.style.animation = '';
+      }
+    }
+
+    // ─── Nightly Logic ────────────────────────────────────────────────────
+    function runNightlyLogic(kw) {
+      if (kw > 10) {
+        sendNotification(
+          `✅ Car is charging — ${kw.toFixed(2)}kW`,
+          'Car is charging',
+          [],
+          'solar-night-high'
+        );
+      } else if (kw < 8) {
+        sendNotification(
+          '⚠️ Car is not charging',
+          `Current consumption: ${kw.toFixed(2)}kW`,
+          [
+            { action: 'snooze15', title: '⏰ Remind me in 15 mins' },
+            { action: 'snooze60', title: '⏰ Remind me in 1 hour' }
+          ],
+          'solar-night-low'
+        );
+      } else {
+        sendNotification(
+          'ℹ️ Current Consumption',
+          `Current consumption: ${kw.toFixed(2)}kW`,
+          [],
+          'solar-night-mid'
+        );
+      }
+    }
+
+    // ─── Send Notification ────────────────────────────────────────────────
+    function sendNotification(title, body, actions = [], tag = 'solar') {
+      if (Notification.permission !== 'granted') {
+        console.warn('[Notifications] Permission not granted');
+        return;
+      }
+
+      // Method 1: Use Service Worker registration (works in background)
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.ready.then(reg => {
+          reg.showNotification(title, {
+            body,
+            icon: '/icons/icon-192.png',
+            badge: '/icons/icon-192.png',
+            tag,
+            data: { consumptionKw: currentConsumptionKw },
+            actions,
+            requireInteraction: actions.length > 0 // Keep notification if it has actions
+          }).then(() => {
+            console.log('[Notifications] Notification shown via SW');
+          }).catch((err) => {
+            console.error('[Notifications] SW notification failed:', err);
+            // Fallback to basic Notification API
+            try {
+              new Notification(title, { 
+                body, 
+                icon: '/icons/icon-192.png', 
+                tag,
+                badge: '/icons/icon-192.png'
+              });
+            } catch (e) {
+              console.error('[Notifications] Both methods failed:', e);
+            }
+          });
+        }).catch((err) => {
+          console.error('[Notifications] SW ready failed:', err);
+          // Fallback to basic Notification API
+          try {
+            new Notification(title, { 
+              body, 
+              icon: '/icons/icon-192.png', 
+              tag,
+              badge: '/icons/icon-192.png'
+            });
+          } catch (e) {
+            console.error('[Notifications] Fallback failed:', e);
+          }
+        });
+      } else {
+        // Fallback: use basic Notification API
+        try {
+          new Notification(title, { 
+            body, 
+            icon: '/icons/icon-192.png', 
+            tag,
+            badge: '/icons/icon-192.png'
+          });
+        } catch (e) {
+          console.error('[Notifications] Basic Notification failed:', e);
+        }
+      }
+    }
+
+    // ─── Schedule Nightly Check (22:30 IST) ──────────────────────────────
+    function scheduleNightlyCheck() {
+      if (scheduledCheckTimer) clearTimeout(scheduledCheckTimer);
+
+      const now = new Date();
+      // Israel time = UTC+3 (IDT in summer)
+      const israelTime = new Date(now.getTime() + 3 * 60 * 60 * 1000);
+      const next = new Date(israelTime);
+      next.setUTCHours(19, 30, 0, 0); // 22:30 IDT = 19:30 UTC
+
+      if (israelTime.getUTCHours() > 19 || (israelTime.getUTCHours() === 19 && israelTime.getUTCMinutes() >= 30)) {
+        next.setUTCDate(next.getUTCDate() + 1);
+      }
+
+      const delay = next.getTime() - now.getTime();
+      console.log(`[Scheduler] Next check in ${Math.round(delay / 60000)} minutes`);
+
+      scheduledCheckTimer = setTimeout(async () => {
+        await fetchConsumption();
+        if (currentConsumptionKw !== null) {
+          runNightlyLogic(currentConsumptionKw);
+        }
+        scheduleNightlyCheck(); // reschedule for next day
+      }, delay);
+    }
+
+    function updateCurrentTimeDisplay() {
+      const now = new Date();
+      const israelTime = new Date(now.getTime() + 3 * 60 * 60 * 1000);
+      
+      const year = israelTime.getUTCFullYear();
+      const month = String(israelTime.getUTCMonth() + 1).padStart(2, '0');
+      const date = String(israelTime.getUTCDate()).padStart(2, '0');
+      const hours = String(israelTime.getUTCHours()).padStart(2, '0');
+      const mins = String(israelTime.getUTCMinutes()).padStart(2, '0');
+      const secs = String(israelTime.getUTCSeconds()).padStart(2, '0');
+      
+      const dateStr = `${year}-${month}-${date}`;
+      const timeStr = `${hours}:${mins}:${secs}`;
+      
+      document.getElementById('currentDateTime').textContent = `${dateStr} · ${timeStr}`;
+    }
+
+    function updateNextCheckDisplay() {
+      const now = new Date();
+      const israelTime = new Date(now.getTime() + 3 * 60 * 60 * 1000);
+      
+      // Create next check time from the original 'now' to avoid date boundary issues
+      const next = new Date(now.getTime());
+      // Set to 22:30 Israel time = 19:30 UTC
+      next.setUTCHours(19, 30, 0, 0);
+      
+      // If the next scheduled time has already passed today, schedule for tomorrow
+      if (next.getTime() <= now.getTime()) {
+        next.setUTCDate(next.getUTCDate() + 1);
+      }
+      
+      const diffMs = next.getTime() - now.getTime();
+      const diffH = Math.floor(diffMs / 3600000);
+      const diffM = Math.floor((diffMs % 3600000) / 60000);
+      const diffS = Math.floor((diffMs % 60000) / 1000);
+      document.getElementById('nextCheckTime').textContent = `Next check: in ${diffH}h ${diffM}m ${diffS}s`;
+    }
+
+    // ─── Periodic Notifications (Every 2 minutes) ────────────────────────
+    let periodicNotifInterval = null;
+
+    function togglePeriodicNotifications() {
+      if (Notification.permission !== 'granted') {
+        requestNotificationPermission();
+        return;
+      }
+
+      const isEnabled = periodicNotifInterval !== null;
+      
+      if (isEnabled) {
+        // Turn OFF
+        clearInterval(periodicNotifInterval);
+        periodicNotifInterval = null;
+        localStorage.setItem('periodicNotifEnabled', 'false');
+        updatePeriodicNotifUI(false);
+        showToast('Periodic notifications disabled', 'bell-off', 'text-slate-400');
+      } else {
+        // Turn ON
+        localStorage.setItem('periodicNotifEnabled', 'true');
+        updatePeriodicNotifUI(true);
+        sendPeriodicNotification(); // Send immediately
+        periodicNotifInterval = setInterval(sendPeriodicNotification, 2 * 60 * 1000);
+        showToast('Periodic notifications enabled - every 2 minutes', 'bell-ring', 'text-green-400');
+      }
+    }
+
+    function sendPeriodicNotification() {
+      if (Notification.permission !== 'granted') return;
+      if (currentConsumptionKw === null || currentConsumptionKw === undefined) {
+        fetchConsumption().then(() => {
+          if (currentConsumptionKw !== null) {
+            sendNotification(
+              '📊 SolarEdge Consumption Update',
+              `Current consumption: ${currentConsumptionKw.toFixed(2)}kW`,
+              [],
+              'solar-periodic'
+            );
+          }
+        });
+      } else {
+        sendNotification(
+          '📊 SolarEdge Consumption Update',
+          `Current consumption: ${currentConsumptionKw.toFixed(2)}kW`,
+          [],
+          'solar-periodic'
+        );
+      }
+    }
+
+    function updatePeriodicNotifUI(isEnabled) {
+      const toggle = document.getElementById('periodicNotifToggle');
+      const indicator = document.getElementById('periodicToggleIndicator');
+      const status = document.getElementById('periodicNotifStatus');
+
+      if (isEnabled) {
+        // ON state
+        toggle?.classList.add('bg-green-600');
+        toggle?.classList.remove('bg-slate-700');
+        indicator?.classList.add('translate-x-7');
+        indicator?.classList.remove('translate-x-1');
+        status.innerHTML = '<div class="w-1.5 h-1.5 rounded-full bg-green-400"></div><span class="text-xs text-green-400 font-medium">Active - sending every 2 min</span>';
+      } else {
+        // OFF state
+        toggle?.classList.remove('bg-green-600');
+        toggle?.classList.add('bg-slate-700');
+        indicator?.classList.remove('translate-x-7');
+        indicator?.classList.add('translate-x-1');
+        status.innerHTML = '<div class="w-1.5 h-1.5 rounded-full bg-slate-500"></div><span class="text-xs text-slate-500">Off</span>';
+      }
+    }
+
+    function loadPeriodicNotifState() {
+      const enabled = localStorage.getItem('periodicNotifEnabled') === 'true';
+      if (enabled && Notification.permission === 'granted') {
+        // Auto-enable if it was previously enabled
+        localStorage.setItem('periodicNotifEnabled', 'true');
+        updatePeriodicNotifUI(true);
+        sendPeriodicNotification();
+        periodicNotifInterval = setInterval(sendPeriodicNotification, 2 * 60 * 1000);
+      }
+    }
+
+    // ─── Toast ────────────────────────────────────────────────────────────
+    let toastTimer;
+    function showToast(msg, icon = 'info', iconClass = 'text-blue-400') {
+      const toast = document.getElementById('toast');
+      const msgEl = document.getElementById('toastMsg');
+      const iconEl = document.getElementById('toastIcon');
+
+      msgEl.textContent = msg;
+      iconEl.setAttribute('data-lucide', icon);
+      iconEl.className = `w-4 h-4 ${iconClass} flex-shrink-0`;
+      lucide.createIcons();
+
+      toast.classList.remove('translate-y-24', 'opacity-0');
+      toast.classList.add('translate-y-0', 'opacity-100');
+
+      if (toastTimer) clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => {
+        toast.classList.remove('translate-y-0', 'opacity-100');
+        toast.classList.add('translate-y-24', 'opacity-0');
+      }, 3500);
+    }
+
+    // ─── Auto-refresh every 5 min ─────────────────────────────────────────
+    setInterval(fetchConsumption, 5 * 60 * 1000);
+    setInterval(updateNextCheckDisplay, 1000); // Update every second for accuracy
+    setInterval(updateCurrentTimeDisplay, 1000); // Update current time every second
+    updateCurrentTimeDisplay(); // Initialize immediately
+  </script>
+</body>
+</html>
