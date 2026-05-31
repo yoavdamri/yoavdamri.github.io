@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Brawl Battle - Online Game</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>Brawl Battle</h1>
+      <div class="stats">
+        <div class="stat">
+          <span class="label">Health:</span>
+          <span id="health" class="value">100</span>
+        </div>
+        <div class="stat">
+          <span class="label">Eliminated:</span>
+          <span id="eliminated" class="value">0</span>/10
+        </div>
+      </div>
+    </div>
+
+    <canvas id="gameCanvas"></canvas>
+
+    <div id="winScreen" class="win-screen hidden">
+      <div class="win-content">
+        <h2>🎉 YOU WIN! 🎉</h2>
+        <p class="applause">👏 👏 👏 👏 👏</p>
+        <p class="message">You eliminated all 10 players!</p>
+        <button onclick="location.reload()">Play Again</button>
+        <button onclick="history.back()">Back to Menu</button>
+      </div>
+    </div>
+
+    <div id="gameOverScreen" class="game-over-screen hidden">
+      <div class="game-over-content">
+        <h2>GAME OVER</h2>
+        <p class="message">You were eliminated!</p>
+        <p class="stats-text">Eliminated: <span id="finalEliminated">0</span>/10</p>
+        <button onclick="location.reload()">Try Again</button>
+        <button onclick="history.back()">Back to Menu</button>
+      </div>
+    </div>
+
+    <div class="controls">
+      <p>Use <strong>Arrow Keys</strong> or <strong>WASD</strong> to move</p>
+      <p>Use <strong>Space</strong> to attack nearby enemies</p>
+    </div>
+  </div>
+
+  <script src="game.js"></script>
+</body>
+</html>
