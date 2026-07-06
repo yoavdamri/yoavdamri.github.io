@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EVNotify</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="stylesheet" href="styles.css">
+  <meta name="theme-color" content="#0b4f6c">
+</head>
+<body>
+  <div class="app-shell">
+    <header>
+      <div class="brand">
+        <div class="logo">⚡</div>
+        <div>
+          <h1>EVNotify</h1>
+          <p>Schedule installable EV reminders with native notifications.</p>
+        </div>
+      </div>
+    </header>
+
+    <main>
+      <section class="card">
+        <h2>Schedule a reminder</h2>
+        <label for="datetime">Reminder date & time</label>
+        <input id="datetime" type="datetime-local" />
+
+        <label for="message">Notification message</label>
+        <input id="message" type="text" placeholder="Your reminder message" value="EVNotify reminder triggered" />
+
+        <div class="buttons">
+          <button id="permissionButton" type="button">Allow Notifications</button>
+          <button id="scheduleButton" type="button">Schedule Notification</button>
+          <button id="installButton" type="button" hidden>Install App</button>
+        </div>
+
+        <p class="hint">If your browser supports notification triggers, the reminder will fire even when the app is closed. Otherwise the reminder works while EVNotify is open.</p>
+      </section>
+
+      <section class="card card-list">
+        <h2>Scheduled reminders</h2>
+        <ul id="reminderList"></ul>
+      </section>
+
+      <section class="card info-card">
+        <h3>How EVNotify works</h3>
+        <p>Install this PWA and allow notifications. Then choose a date and time to receive a native notification when the reminder is triggered.</p>
+        <p>For best results on Android and Chrome-based browsers, install the app and keep it available in the background.</p>
+      </section>
+    </main>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
