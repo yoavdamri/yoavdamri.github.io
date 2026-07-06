@@ -44,6 +44,73 @@ self.addEventListener('fetch', (event) => {
   );
 });
 
+let reminders = [];
+
+async function loadReminders() {
+  const cache = await caches.open(CACHE_NAME);
+  const stored = await cache.match('reminders-data');
+  if (!stored) {
+    reminders = [];
+    return;
+  }
+  const text = await stored.text();
+  try {
+    reminders = JSON.parse(text);
+  } catch (error) {
+    reminders = [];
+  }
+}
+
+async function persistReminders() {
+  const cache = await caches.open(CACHE_NAME);
+  const data = new Response(JSON.stringify(reminders), {
+    headers: { 'Content-Type': 'application/json' }
+  });
+  await cache.put('reminders-data', data);
+}
+
+async function sendDueNotifications() {
+  const now = Date.now();
+  const due = reminders.filter((reminder) => reminder.timestamp <= now);
+  reminders = reminders.filter((reminder) => reminder.timestamp > now);
+  await persistReminders();
+  return Promise.all(
+    due.map((reminder) =>
+      self.registration.showNotification('EVNotify Reminder', {
+        body: reminder.message,
+        icon: 'icons/icon-192.png',
+        badge: 'icons/icon-192.png',
+        tag: `evnotify-${reminder.id}`,
+        data: reminder
+      })
+    )
+  );
+}
+
+self.addEventListener('message', (event) => {
+  const message = event.data;
+  if (!message || message.type !== 'schedule-reminder') {
+    return;
+  }
+
+  const reminder = message.reminder;
+  if (!reminder || !reminder.id) {
+    return;
+  }
+
+  reminders = reminders.filter((item) => item.id !== reminder.id);
+  reminders.push(reminder);
+  persistReminders();
+});
+
+self.addEventListener('periodicsync', (event) => {
+  if (event.tag === 'evnotify-check') {
+    event.waitUntil(
+      loadReminders().then(sendDueNotifications)
+    );
+  }
+});
+
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
   event.waitUntil(
