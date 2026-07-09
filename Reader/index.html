@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Reader Club</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="page-shell">
+      <header class="hero">
+        <div>
+          <p class="eyebrow">🌈 Reader Club</p>
+          <h1>10 tiny books for happy reading</h1>
+          <p>
+            Pick a book, tap a word for a Hebrew meaning, and press play to hear a row aloud.
+          </p>
+        </div>
+        <div class="hero-badge">📚 Easy English</div>
+      </header>
+
+      <main class="app-grid">
+        <section class="books-panel" aria-labelledby="books-title">
+          <div class="books-panel-head">
+            <h2 id="books-title">Choose a book</h2>
+            <div id="categoryTabs" class="category-tabs"></div>
+          </div>
+          <div id="bookList" class="book-list"></div>
+        </section>
+
+        <section id="readerPane" class="reader-pane" aria-live="polite">
+          <div class="reader-empty">Choose a book to start reading.</div>
+        </section>
+      </main>
+    </div>
+
+    <script src="app.js"></script>
+  </body>
+</html>
