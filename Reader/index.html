@@ -3,7 +3,11 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#8edbff" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="Reader Club" />
     <title>Reader Club</title>
+    <link rel="manifest" href="manifest.json" />
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
@@ -11,12 +15,15 @@
       <header class="hero">
         <div>
           <p class="eyebrow">🌈 Reader Club</p>
-          <h1>10 tiny books for happy reading</h1>
+          <h1>Stories for joyful reading anytime</h1>
           <p>
             Pick a book, tap a word for a Hebrew meaning, and press play to hear a row aloud.
           </p>
         </div>
-        <div class="hero-badge">📚 Easy English</div>
+        <div class="hero-actions">
+          <button id="installButton" class="ghost-button install-button" hidden>📲 Install app</button>
+          <div class="hero-badge">📚 Easy English</div>
+        </div>
       </header>
 
       <main class="app-grid">

@@ -1,7 +1,6 @@
 const categories = [
-  { id: "short", label: "Short", description: "Tiny stories with easy words" },
-  { id: "medium", label: "Medium", description: "A little longer and a little more challenging" },
-  { id: "long", label: "Long", description: "Longer stories for steady readers" }
+  { id: "short", label: "Short", description: "A collection of quick stories and gentle reading" },
+  { id: "technology", label: "Technology", description: "Stories about how modern inventions work" }
 ];
 
 const booksByCategory = {
@@ -125,9 +124,7 @@ const booksByCategory = {
         "Leo paddled with a small oar.",
         "He felt happy and free."
       ]
-    }
-  ],
-  medium: [
+    },
     {
       id: "mina",
       emoji: "🗺️",
@@ -166,9 +163,7 @@ const booksByCategory = {
         "Inside was a note and a little ribbon with a star.",
         "Rosa laughed and kept the ribbon in her pocket."
       ]
-    }
-  ],
-  long: [
+    },
     {
       id: "ari",
       emoji: "☁️",
@@ -209,6 +204,147 @@ const booksByCategory = {
         "Nora saw a sleepy cat, a bright moth, and a tiny snail.",
         "The night felt calm and kind, and the lantern made the garden glow.",
         "When Nora went inside, she kept the warm light in her mind."
+      ]
+    }
+  ],
+  technology: [
+    {
+      id: "radio",
+      emoji: "📻",
+      title: "How Radio Works",
+      blurb: "A simple guide to invisible waves and listening to sound.",
+      rows: [
+        "Radio begins when a voice reaches a microphone and turns into an electrical signal.",
+        "That signal is carried into a transmitter, where it is changed into a radio wave.",
+        "The radio wave travels through the air at a very high speed.",
+        "A receiver picks up the wave with its antenna and captures the pattern of the signal.",
+        "Then the receiver changes the pattern back into sound.",
+        "This is why a person can hear music, news, or stories from far away.",
+        "The process depends on invisible energy moving through space.",
+        "The transmitter and receiver must be tuned to the same frequency.",
+        "When they match, the message can travel clearly and smoothly.",
+        "That is the secret behind every radio station and every broadcast.",
+        "Radio waves can cross cities, mountains, and oceans with amazing speed.",
+        "People once used radio to learn about the world during difficult times.",
+        "Today radio still helps families, drivers, and travelers stay informed.",
+        "A simple radio set can turn tiny electric signals into warm voices.",
+        "That makes radio one of the oldest and most useful inventions in technology.",
+        "Even in a modern world, radio remains a quiet and powerful helper.",
+        "It brings comfort, news, and music to millions of people every day.",
+        "The magic is not only in the machine, but also in the invisible wave.",
+        "Radio shows how science can turn air into a path for communication.",
+        "It is a wonderful example of how clever ideas can change daily life."
+      ]
+    },
+    {
+      id: "television",
+      emoji: "📺",
+      title: "How Television Works",
+      blurb: "A story about light, sound, and moving pictures.",
+      rows: [
+        "Television begins when a camera captures light from a scene and changes it into electrical signals.",
+        "The camera turns the bright and dark parts of an image into tiny pieces of information.",
+        "Those pieces travel through wires or wireless systems to a television set.",
+        "Inside the screen, tiny dots of light glow in different colors.",
+        "The dots are arranged so quickly that the eye sees a full picture.",
+        "At the same time, the sound of the scene is sent as another signal.",
+        "The speaker turns that signal back into voices, music, and effects.",
+        "This is why a television can show both moving images and sound together.",
+        "Modern televisions use digital signals, which are more clear and accurate.",
+        "The images are refreshed many times each second so they appear smooth.",
+        "A television is really a small and clever combination of light, electricity, and mathematics.",
+        "Engineers designed it so people could watch stories from their own homes.",
+        "It brought families together around a glowing screen.",
+        "Over time, televisions became thinner, brighter, and smarter.",
+        "Now they can connect to the internet and show streaming content.",
+        "Even with new devices, television still plays a strong role in culture.",
+        "It can teach, entertain, and connect communities across great distances.",
+        "The secret of television is that it turns light and sound into a living illusion.",
+        "That illusion feels real because the brain accepts it as motion and emotion.",
+        "Television is one of the most powerful ways people share stories."
+      ]
+    },
+    {
+      id: "laser",
+      emoji: "🔦",
+      title: "How a Laser Works",
+      blurb: "A bright beam that begins with light and energy.",
+      rows: [
+        "A laser starts with a material that can be energized by electricity or light.",
+        "When that material is excited, its atoms reach a higher state of energy.",
+        "The atoms then release light particles called photons.",
+        "Inside the laser, mirrors help guide the photons in one direction.",
+        "The light is made to move in a very organized pattern.",
+        "That is why a laser beam looks narrow and powerful.",
+        "Unlike ordinary light, laser light is steady and focused.",
+        "It can travel long distances without spreading too much.",
+        "This makes lasers useful for cutting, measuring, and sending signals.",
+        "Doctors use lasers for surgery, and engineers use them for precision work.",
+        "Scientists also use lasers to study tiny particles and distant stars.",
+        "A barcode scanner uses a laser to read labels quickly and accurately.",
+        "A laser pointer can mark a location on a screen with a bright dot.",
+        "The beam is so focused that it can perform delicate tasks with care.",
+        "The word laser comes from a description of how the light is produced.",
+        "It is a tool that turns energy into a very controlled stream of light.",
+        "That control is what makes the laser so special.",
+        "It is both precise and powerful, which is why it appears in so many fields.",
+        "From factories to hospitals, lasers help people work with great accuracy.",
+        "The beam seems simple, but its science is deeply elegant."
+      ]
+    },
+    {
+      id: "electricity",
+      emoji: "💡",
+      title: "How Electricity Is Produced",
+      blurb: "A story about energy moving from nature to homes.",
+      rows: [
+        "Electricity is produced when energy is changed into a flow of charged particles.",
+        "Power plants use many kinds of energy sources to begin this process.",
+        "Some plants burn fuel to heat water and create steam.",
+        "The steam spins a turbine, and the turbine turns a generator.",
+        "The generator uses magnets and coils to create electric current.",
+        "Other plants use moving water from a dam to spin the turbine.",
+        "Wind farms use large blades to capture moving air and make rotation.",
+        "Solar panels turn sunlight directly into electrical energy.",
+        "Nuclear plants release heat from splitting atoms to make steam.",
+        "Each method is different, but the goal is the same.",
+        "The generated electricity then travels through cables to homes and schools.",
+        "Transformers help raise or lower the voltage for safe transport.",
+        "The flow of electricity can power lights, computers, and appliances.",
+        "It also keeps hospitals, trains, and communication towers running.",
+        "People depend on electricity every hour of the day.",
+        "That is why energy production is such an important part of modern life.",
+        "Engineers work hard to make the process reliable and efficient.",
+        "They also search for cleaner ways to create power.",
+        "A future with better energy could protect the planet and improve living standards.",
+        "Electricity is a quiet force, but it shapes almost everything people do."
+      ]
+    },
+    {
+      id: "satellite",
+      emoji: "🛰️",
+      title: "How Satellites Help People",
+      blurb: "A story about orbiting machines and everyday usefulness.",
+      rows: [
+        "Satellites are machines that travel around Earth above the clouds.",
+        "They carry instruments that can observe the planet from space.",
+        "Some satellites help weather forecasters track storms and rain.",
+        "Others help people find directions with global positioning systems.",
+        "Communication satellites carry phone calls and television signals across continents.",
+        "They can connect places that are far apart and hard to reach.",
+        "Scientists use satellites to study forests, oceans, and ice.",
+        "They can notice changes that happen over weeks or years.",
+        "This information helps leaders make better choices for the environment.",
+        "Satellites also support rescue teams during emergencies and disasters.",
+        "They can help map roads, rivers, and damaged areas quickly.",
+        "A small satellite can carry powerful tools for observation and sensing.",
+        "The technology is complex, but the purpose is simple and human.",
+        "It helps people stay informed, safe, and connected.",
+        "Many modern services rely on satellites without most people noticing.",
+        "When a map app gives directions, a satellite may be helping behind the scenes.",
+        "When a storm warning arrives, satellites may have gathered the first clues.",
+        "They are a reminder that technology can reach far beyond the ground.",
+        "In a sense, satellites bring the whole world closer together."
       ]
     }
   ]
@@ -487,9 +623,11 @@ const wordTranslations = {
 const bookList = document.getElementById("bookList");
 const readerPane = document.getElementById("readerPane");
 const categoryTabs = document.getElementById("categoryTabs");
+const installButton = document.getElementById("installButton");
 
 let activeCategory = "short";
 let activeBookId = null;
+let deferredInstallPrompt = null;
 
 function getActiveBooks() {
   return booksByCategory[activeCategory] || [];
@@ -640,6 +778,36 @@ document.addEventListener("click", (event) => {
     document.querySelectorAll(".word-tooltip").forEach((tooltip) => tooltip.remove());
   }
 });
+
+window.addEventListener("beforeinstallprompt", (event) => {
+  event.preventDefault();
+  deferredInstallPrompt = event;
+  if (installButton) {
+    installButton.hidden = false;
+  }
+});
+
+installButton?.addEventListener("click", async () => {
+  if (!deferredInstallPrompt) return;
+  deferredInstallPrompt.prompt();
+  const choice = await deferredInstallPrompt.userChoice;
+  if (choice.outcome === "accepted") {
+    installButton.hidden = true;
+  }
+  deferredInstallPrompt = null;
+});
+
+window.addEventListener("appinstalled", () => {
+  if (installButton) {
+    installButton.hidden = true;
+  }
+});
+
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("./sw.js").catch(() => {});
+  });
+}
 
 renderCategoryTabs();
 renderBookList();
