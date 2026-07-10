@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="אפליקציית מערכת שעות עם תזכורות בעברית וקריאה קולית." />
+    <meta name="theme-color" content="#5d7cff" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <title>מערכת שעות</title>
+    <link rel="manifest" href="manifest.json" />
+    <link rel="apple-touch-icon" href="icons/icon-192.svg" />
+    <link rel="mask-icon" href="icons/icon-192.svg" color="#5d7cff" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="page-shell">
+      <header class="hero">
+        <div>
+          <p class="eyebrow">🗓️ מערכת שעות</p>
+          <h1>תזכורות וקריאה בקול</h1>
+          <p>כשהשעה מתקרבת, האפליקציה תקרא בקול את המשימה בעברית, פעמיים, בצורה ברורה.</p>
+        </div>
+        <div class="status-card">
+          <div class="status-label">הזמן עכשיו</div>
+          <div id="currentTime" class="time-big">--:--</div>
+          <button id="startButton" class="start-button">▶️ הפעל תזכורות</button>
+          <button id="installButton" class="secondary-button" hidden>📥 התקן את האפליקציה</button>
+        </div>
+      </header>
+
+      <main class="content-grid">
+        <section class="panel">
+          <h2>לוח השעות</h2>
+          <div class="editor-card">
+            <h3>הוסף או ערוך משימה</h3>
+            <div class="editor-row">
+              <label>
+                שעה
+                <input id="timeInput" type="time" />
+              </label>
+              <label>
+                כותרת
+                <input id="titleInput" type="text" placeholder="מה לעשות?" />
+              </label>
+            </div>
+            <div class="editor-actions">
+              <button id="saveButton" class="save-button">➕ הוסף משימה</button>
+              <button id="clearButton" class="secondary-button">נקה</button>
+            </div>
+            <p id="editorHint" class="editor-hint">לחץ על משימה לעריכה או מחיקה.</p>
+          </div>
+          <div id="scheduleList" class="schedule-list"></div>
+        </section>
+
+        <section class="panel">
+          <h2>מצב התזכורת</h2>
+          <p id="statusText" class="status-text">המערכת ממתינה להפעלה.</p>
+          <div id="nextTask" class="next-task">אין משימה קרובה כרגע.</div>
+        </section>
+      </main>
+    </div>
+
+    <script src="app.js"></script>
+  </body>
+</html>
