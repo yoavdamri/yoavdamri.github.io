@@ -65,12 +65,24 @@ button {
   max-width: 680px;
 }
 
+.hero-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
 .hero-badge {
   padding: 14px 18px;
   border-radius: 999px;
   background: linear-gradient(135deg, var(--sun), #ffd4a9);
   font-weight: 700;
   white-space: nowrap;
+}
+
+.install-button {
+  background: linear-gradient(135deg, var(--sky), #b7ecff);
+  color: #16304a;
 }
 
 .app-grid {
@@ -290,5 +302,9 @@ button {
   .reader-top {
     flex-direction: column;
     align-items: flex-start;
+  }
+
+  .hero-actions {
+    width: 100%;
   }
 }
