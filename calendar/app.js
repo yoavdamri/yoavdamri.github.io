@@ -19,11 +19,13 @@ const titleInput = document.getElementById("titleInput");
 const saveButton = document.getElementById("saveButton");
 const clearButton = document.getElementById("clearButton");
 const editorHint = document.getElementById("editorHint");
+const installButton = document.getElementById("installButton");
 
 let schedule = loadSchedule();
 let notificationsEnabled = false;
 let lastSpokenKey = null;
 let editingIndex = null;
+let installPromptEvent = null;
 
 function loadSchedule() {
   try {
@@ -199,6 +201,47 @@ startButton.addEventListener("click", () => {
   speakTitle("המערכת מוכנה לתזכורות");
 });
 
+function updateInstallButton() {
+  installButton.hidden = !installPromptEvent;
+}
+
+function initializeInstallPrompt() {
+  window.addEventListener("beforeinstallprompt", (event) => {
+    event.preventDefault();
+    installPromptEvent = event;
+    updateInstallButton();
+  });
+
+  installButton.addEventListener("click", async () => {
+    if (!installPromptEvent) return;
+
+    installPromptEvent.prompt();
+    const choiceResult = await installPromptEvent.userChoice;
+    if (choiceResult.outcome === "accepted") {
+      installPromptEvent = null;
+    }
+    updateInstallButton();
+  });
+
+  window.addEventListener("appinstalled", () => {
+    installPromptEvent = null;
+    updateInstallButton();
+  });
+}
+
+async function registerServiceWorker() {
+  if (!("serviceWorker" in navigator)) return;
+
+  try {
+    const registration = await navigator.serviceWorker.register("./sw.js");
+    console.log("Service worker registered:", registration.scope);
+  } catch (error) {
+    console.warn("Service worker registration failed:", error);
+  }
+}
+
+initializeInstallPrompt();
+registerServiceWorker();
 resetEditor();
 renderSchedule();
 updateClock();
