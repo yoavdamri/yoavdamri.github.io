@@ -852,7 +852,7 @@ const wordTranslations = {
   directly: "ישירות",
   nuclear: "גרעיני",
   splitting: "פיצול",
-n  generated: "מופק",
+  generated: "מופק",
   cables: "כבלים",
   schools: "בתי ספר",
   transformers: "שנאים",
